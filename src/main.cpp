@@ -61,10 +61,11 @@ neighborInfo swap(vector <int> &solution, vector <vector <subsequenceInfo>> &sub
         partialCost += nodeWeights[solution[i]] * partialTime;
         
         // Remaining segment [j+1, n]: shift by partialTime
+        int n = solution.size() - 1;  // Last position in solution
         double edgeToNext = distanceMatrix[solution[i]][solution[j+1]];
         cost = partialCost + 
-               subsequenceMatrix[j+1][dimension].sumWeights * (partialTime + edgeToNext) +
-               subsequenceMatrix[j+1][dimension].acumulateCost;
+               subsequenceMatrix[j+1][n].sumWeights * (partialTime + edgeToNext) +
+               subsequenceMatrix[j+1][n].acumulateCost;
       }else{
         // Non-adjacent swap
         
@@ -93,8 +94,8 @@ neighborInfo swap(vector <int> &solution, vector <vector <subsequenceInfo>> &sub
         double edgeToRest = distanceMatrix[solution[i]][solution[j+1]];
         double restShift = partialTime + edgeToRest;
         cost = partialCost + 
-               subsequenceMatrix[j+1][dimension].sumWeights * restShift +
-               subsequenceMatrix[j+1][dimension].acumulateCost;
+               subsequenceMatrix[j+1][size-1].sumWeights * restShift +
+               subsequenceMatrix[j+1][size-1].acumulateCost;
       }
 
       if(cost < bestNeighbor.bestCost){    
@@ -108,81 +109,139 @@ neighborInfo swap(vector <int> &solution, vector <vector <subsequenceInfo>> &sub
   return bestNeighbor;
 }
 
-neighborInfo twoOpt(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix){
+neighborInfo twoOpt(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights){
   double partialCost, cost, partialTime;
   int size = solution.size();
 
   neighborInfo bestNeighbor;
   bestNeighbor.bestCost = DBL_MAX;
-
+  
   for(int i = 1; i < size; i++){
     for(int j = i+1; j < size-1; j++){
-      partialCost = subsequenceMatrix[0][i-1].acumulateCost + ((j-i+1) * (subsequenceMatrix[0][i-1].totalTime + distanceMatrix[solution[i-1]][solution[j]])) + subsequenceMatrix[j][i].acumulateCost;
-      partialTime = subsequenceMatrix[0][i-1].totalTime + distanceMatrix[solution[i-1]][solution[j]] + subsequenceMatrix[j][i].totalTime;
-
-      cost = partialCost + ((dimension-j) * (partialTime + distanceMatrix[solution[i]][solution[j+1]]) + subsequenceMatrix[j+1][dimension].acumulateCost);
+      // 2-opt reverses segment [i, j]
+      
+      // Segment [0, i-1]: unchanged
+      partialCost = subsequenceMatrix[0][i-1].acumulateCost;
+      partialTime = subsequenceMatrix[0][i-1].totalTime;
+      
+      // Edge from i-1 to j (entering reversed segment)
+      double edgeToReversed = distanceMatrix[solution[i-1]][solution[j]];
+      double reversedShift = partialTime + edgeToReversed;
+      
+      // Reversed segment [j, i]: shifted by reversedShift
+      // Use [j][i] which contains the reversed subsequence info
+      partialCost += subsequenceMatrix[j][i].sumWeights * reversedShift + 
+                     subsequenceMatrix[j][i].acumulateCost;
+      partialTime = reversedShift + subsequenceMatrix[j][i].totalTime;
+      
+      // Remaining segment [j+1, n]: shifted by partialTime
+      double edgeToRest = distanceMatrix[solution[i]][solution[j+1]];
+      double restShift = partialTime + edgeToRest;
+      cost = partialCost + 
+             subsequenceMatrix[j+1][size-1].sumWeights * restShift +
+             subsequenceMatrix[j+1][size-1].acumulateCost;
 
       if(cost < bestNeighbor.bestCost){    
         bestNeighbor.iBest = i;
         bestNeighbor.jBest = j;
         bestNeighbor.bestCost = cost;
-	    } 
+      } 
     }
   }
 
   return bestNeighbor;
 }
 
-neighborInfo reinsertion(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix){
+neighborInfo reinsertion(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights){
   double partialCost, cost, partialTime;
   int size = solution.size();
 
   neighborInfo bestNeighbor;
   bestNeighbor.bestCost = DBL_MAX;
 
+  // Case 1 - Forward reinsertion: Move node i forward to position j (i < j)
+  // Resulting path: [0, i-1] → [i+1, j] → i → [j+1, n]
   for(int i = 1; i < size-2; i++){
     for(int j = i + 1; j < size-1; j++){
-      partialCost = subsequenceMatrix[0][i-1].acumulateCost + subsequenceMatrix[0][i-1].totalTime + distanceMatrix[solution[i-1]][solution[i+1]];
-      partialTime = subsequenceMatrix[0][i-1].totalTime + distanceMatrix[solution[i-1]][solution[i+1]];
-
-      partialCost = partialCost + ((j-i-1) * (partialTime)) + subsequenceMatrix[i+1][j].acumulateCost;
-      partialTime = partialTime + subsequenceMatrix[i+1][j].totalTime;
-
-      partialCost = partialCost + partialTime + distanceMatrix[solution[j]][solution[i]];
-      partialTime = partialTime + distanceMatrix[solution[j]][solution[i]];
-
-      cost = partialCost + ((dimension-j) * (partialTime + distanceMatrix[solution[i]][solution[j+1]])) + subsequenceMatrix[j+1][dimension].acumulateCost;
+      
+      // Segment [0, i-1]: unchanged
+      partialCost = subsequenceMatrix[0][i-1].acumulateCost;
+      partialTime = subsequenceMatrix[0][i-1].totalTime;
+      
+      // Bridge: skip node i, go directly from i-1 to i+1
+      double edgeSkip = distanceMatrix[solution[i-1]][solution[i+1]];
+      double middleShift = partialTime + edgeSkip;
+      
+      // Segment [i+1, j]: shifted by middleShift
+      // Formula: W[i+1,j] × T_shift + C[i+1,j]
+      partialCost += subsequenceMatrix[i+1][j].sumWeights * middleShift + 
+                     subsequenceMatrix[i+1][j].acumulateCost;
+      partialTime = middleShift + subsequenceMatrix[i+1][j].totalTime;
+      
+      // Insert node i after position j
+      double edgeToI = distanceMatrix[solution[j]][solution[i]];
+      partialTime += edgeToI;
+      partialCost += nodeWeights[solution[i]] * partialTime;
+      
+      // Remaining segment [j+1, n]: shifted by partialTime
+      double edgeToRest = distanceMatrix[solution[i]][solution[j+1]];
+      double restShift = partialTime + edgeToRest;
+      cost = partialCost + 
+             subsequenceMatrix[j+1][size-1].sumWeights * restShift +
+             subsequenceMatrix[j+1][size-1].acumulateCost;
 
       if(cost < bestNeighbor.bestCost){    
         bestNeighbor.iBest = i;
         bestNeighbor.jBest = j;
         bestNeighbor.bestCost = cost;
-	    } 
+      } 
     }
   }
 
+  // Case 2 - Backwards reinsertion: Move node i backward to position j (j < i)
+  // Resulting path: [0, j-1] → i → [j, i-1] → [i+1, n]
   for(int j = 1; j < size-2; j++){
     for(int i = j + 1; i < size-1; i++){
-      partialCost = subsequenceMatrix[0][j-1].acumulateCost + subsequenceMatrix[0][j-1].totalTime + distanceMatrix[solution[j-1]][solution[i]];
-      partialTime = subsequenceMatrix[0][j-1].totalTime + distanceMatrix[solution[j-1]][solution[i]];
-
-      partialCost = partialCost + ((i-j) * (partialTime + distanceMatrix[solution[i]][solution[j]])) + subsequenceMatrix[j][i-1].acumulateCost;
-      partialTime = partialTime + distanceMatrix[solution[i]][solution[j]] + subsequenceMatrix[j][i-1].totalTime;
-
-      cost = partialCost + ((dimension-i) * (partialTime + distanceMatrix[solution[i-1]][solution[i+1]])) + subsequenceMatrix[i+1][dimension].acumulateCost;
+      
+      // Segment [0, j-1]: unchanged
+      partialCost = subsequenceMatrix[0][j-1].acumulateCost;
+      partialTime = subsequenceMatrix[0][j-1].totalTime;
+      
+      // Insert node i at position j
+      double edgeToI = distanceMatrix[solution[j-1]][solution[i]];
+      partialTime += edgeToI;
+      partialCost += nodeWeights[solution[i]] * partialTime;
+      
+      // Edge from i to j (where middle segment starts)
+      double edgeToMiddle = distanceMatrix[solution[i]][solution[j]];
+      double middleShift = partialTime + edgeToMiddle;
+      
+      // Segment [j, i-1]: shifted by middleShift
+      // Formula: W[j,i-1] × T_shift + C[j,i-1]
+      partialCost += subsequenceMatrix[j][i-1].sumWeights * middleShift + 
+                     subsequenceMatrix[j][i-1].acumulateCost;
+      partialTime = middleShift + subsequenceMatrix[j][i-1].totalTime;
+      
+      // Remaining segment [i+1, n]: shifted by partialTime
+      // Bridge: skip node i, connect i-1 to i+1
+      double edgeToRest = distanceMatrix[solution[i-1]][solution[i+1]];
+      double restShift = partialTime + edgeToRest;
+      cost = partialCost + 
+             subsequenceMatrix[i+1][size-1].sumWeights * restShift +
+             subsequenceMatrix[i+1][size-1].acumulateCost;
 
       if(cost < bestNeighbor.bestCost){    
         bestNeighbor.iBest = i;
         bestNeighbor.jBest = j;
         bestNeighbor.bestCost = cost;
-	    } 
+      } 
     }
   }
 
   return bestNeighbor;
 }
 
-neighborInfo oropt2(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix){
+neighborInfo oropt2(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights){
   double partialCost, cost, partialTime;
   int size = solution.size();
 
@@ -193,103 +252,177 @@ neighborInfo oropt2(vector <int> &solution, vector <vector <subsequenceInfo>> &s
     for(int j = 1; j <= size-3; j++){
       if(i != j){
         if(i < j){
-          partialCost = subsequenceMatrix[0][i-1].acumulateCost + subsequenceMatrix[0][i-1].totalTime + distanceMatrix[solution[i-1]][solution[i+2]];
-          partialTime = subsequenceMatrix[0][i-1].totalTime + distanceMatrix[solution[i-1]][solution[i+2]];
-
-          partialCost = partialCost + ((j-i-1) * (partialTime)) + subsequenceMatrix[i+2][j+1].acumulateCost;
-          partialTime = partialTime + subsequenceMatrix[i+2][j+1].totalTime;
-
-          partialCost = partialCost + partialTime + distanceMatrix[solution[j+1]][solution[i]];
-          partialTime = partialTime + distanceMatrix[solution[j+1]][solution[i]];
-
-          partialCost = partialCost + partialTime + distanceMatrix[solution[i]][solution[i+1]];
-          partialTime = partialTime + distanceMatrix[solution[i]][solution[i+1]];
-
-          cost = partialCost + ((dimension-j-1) * (partialTime + distanceMatrix[solution[i+1]][solution[j+2]])) + subsequenceMatrix[j+2][dimension].acumulateCost;
+          // Forward move: [0, i-1] → [i+2, j+1] → [i, i+1] → [j+2, n]
+          
+          // Segment [0, i-1]: unchanged
+          partialCost = subsequenceMatrix[0][i-1].acumulateCost;
+          partialTime = subsequenceMatrix[0][i-1].totalTime;
+          
+          // Bridge: skip nodes [i, i+1], connect i-1 to i+2
+          double edgeSkip = distanceMatrix[solution[i-1]][solution[i+2]];
+          double middleShift = partialTime + edgeSkip;
+          
+          // Segment [i+2, j+1]: shifted by middleShift
+          partialCost += subsequenceMatrix[i+2][j+1].sumWeights * middleShift + 
+                         subsequenceMatrix[i+2][j+1].acumulateCost;
+          partialTime = middleShift + subsequenceMatrix[i+2][j+1].totalTime;
+          
+          // Insert first node (i) after segment [i+2, j+1]
+          double edgeToI = distanceMatrix[solution[j+1]][solution[i]];
+          partialTime += edgeToI;
+          partialCost += nodeWeights[solution[i]] * partialTime;
+          
+          // Insert second node (i+1) after node i
+          double edgeToI1 = distanceMatrix[solution[i]][solution[i+1]];
+          partialTime += edgeToI1;
+          partialCost += nodeWeights[solution[i+1]] * partialTime;
+          
+          // Remaining segment [j+2, n]: shifted by partialTime
+          double edgeToRest = distanceMatrix[solution[i+1]][solution[j+2]];
+          double restShift = partialTime + edgeToRest;
+          cost = partialCost + 
+                 subsequenceMatrix[j+2][size-1].sumWeights * restShift +
+                 subsequenceMatrix[j+2][size-1].acumulateCost;
+                 
         }else{
-          partialCost = subsequenceMatrix[0][j-1].acumulateCost + subsequenceMatrix[0][j-1].totalTime + distanceMatrix[solution[j-1]][solution[i]];
-          partialTime = subsequenceMatrix[0][j-1].totalTime + distanceMatrix[solution[j-1]][solution[i]];
-
-          partialCost = partialCost + partialTime + distanceMatrix[solution[i]][solution[i+1]];
-          partialTime = partialTime + distanceMatrix[solution[i]][solution[i+1]];
-
-          partialCost = partialCost + partialTime + distanceMatrix[solution[i+1]][solution[j]];
-          partialTime = partialTime + distanceMatrix[solution[i+1]][solution[j]];
-
-          partialCost = partialCost + ((i-j-1) * (partialTime)) + subsequenceMatrix[j][i-1].acumulateCost;
-          partialTime = partialTime + subsequenceMatrix[j][i-1].totalTime;
-
-          cost = partialCost + ((dimension-i-1) * (partialTime + distanceMatrix[solution[i-1]][solution[i+2]])) + subsequenceMatrix[i+2][dimension].acumulateCost;
+          // Backward move: [0, j-1] → [i, i+1] → [j, i-1] → [i+2, n]
+          
+          // Segment [0, j-1]: unchanged
+          partialCost = subsequenceMatrix[0][j-1].acumulateCost;
+          partialTime = subsequenceMatrix[0][j-1].totalTime;
+          
+          // Insert first node (i) at position j
+          double edgeToI = distanceMatrix[solution[j-1]][solution[i]];
+          partialTime += edgeToI;
+          partialCost += nodeWeights[solution[i]] * partialTime;
+          
+          // Insert second node (i+1) after node i
+          double edgeToI1 = distanceMatrix[solution[i]][solution[i+1]];
+          partialTime += edgeToI1;
+          partialCost += nodeWeights[solution[i+1]] * partialTime;
+          
+          // Edge to middle segment [j, i-1]
+          double edgeToMiddle = distanceMatrix[solution[i+1]][solution[j]];
+          double middleShift = partialTime + edgeToMiddle;
+          
+          // Segment [j, i-1]: shifted by middleShift
+          partialCost += subsequenceMatrix[j][i-1].sumWeights * middleShift + 
+                         subsequenceMatrix[j][i-1].acumulateCost;
+          partialTime = middleShift + subsequenceMatrix[j][i-1].totalTime;
+          
+          // Remaining segment [i+2, n]: shifted by partialTime
+          // Bridge: skip nodes [i, i+1], connect i-1 to i+2
+          double edgeToRest = distanceMatrix[solution[i-1]][solution[i+2]];
+          double restShift = partialTime + edgeToRest;
+          cost = partialCost + 
+                 subsequenceMatrix[i+2][size-1].sumWeights * restShift +
+                 subsequenceMatrix[i+2][size-1].acumulateCost;
         }
 
         if(cost < bestNeighbor.bestCost){    
           bestNeighbor.iBest = i;
           bestNeighbor.jBest = j;
           bestNeighbor.bestCost = cost;
-	      } 
+        } 
       }
     }
   }
 
   return bestNeighbor;
 }
-
-neighborInfo oropt3(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix){
+neighborInfo oropt3(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights){
   double partialCost, cost, partialTime;
-  int tam = solution.size();
+  int size = solution.size();
   neighborInfo bestNeighbor;
   bestNeighbor.bestCost = DBL_MAX;
 
-  for(int i = 1; i < tam-3; i++){
-    for(int j = 1; j <= tam-4; j++){
+  for(int i = 1; i < size-3; i++){
+    for(int j = 1; j <= size-4; j++){
       if(i != j){
         if(i < j){
-          partialCost = subsequenceMatrix[0][i-1].acumulateCost + subsequenceMatrix[0][i-1].totalTime + distanceMatrix[solution[i-1]][solution[i+3]];
-          partialTime = subsequenceMatrix[0][i-1].totalTime + distanceMatrix[solution[i-1]][solution[i+3]];
-
-          partialCost = partialCost + ((j-i-1) * (partialTime)) + subsequenceMatrix[i+3][j+2].acumulateCost;
-          partialTime = partialTime + subsequenceMatrix[i+3][j+2].totalTime;
-
-          partialCost = partialCost + partialTime + distanceMatrix[solution[j+2]][solution[i]];
-          partialTime = partialTime + distanceMatrix[solution[j+2]][solution[i]];
-
-          partialCost = partialCost + ((2) * (partialTime)) + subsequenceMatrix[i][i+2].acumulateCost;
-          partialTime = partialTime + subsequenceMatrix[i][i+2].totalTime;
-
-          cost = partialCost + ((dimension-j-2) * (partialTime + distanceMatrix[solution[i+2]][solution[j+3]])) + subsequenceMatrix[j+3][dimension].acumulateCost;
+          // Forward move: [0, i-1] → [i+3, j+2] → [i, i+1, i+2] → [j+3, n]
+          
+          // Segment [0, i-1]: unchanged
+          partialCost = subsequenceMatrix[0][i-1].acumulateCost;
+          partialTime = subsequenceMatrix[0][i-1].totalTime;
+          
+          // Bridge: skip nodes [i, i+1, i+2], connect i-1 to i+3
+          double edgeSkip = distanceMatrix[solution[i-1]][solution[i+3]];
+          double middleShift = partialTime + edgeSkip;
+          
+          // Segment [i+3, j+2]: shifted by middleShift
+          partialCost += subsequenceMatrix[i+3][j+2].sumWeights * middleShift + 
+                         subsequenceMatrix[i+3][j+2].acumulateCost;
+          partialTime = middleShift + subsequenceMatrix[i+3][j+2].totalTime;
+          
+          // Insert the 3-node subsequence [i, i+1, i+2] after segment [i+3, j+2]
+          double edgeToI = distanceMatrix[solution[j+2]][solution[i]];
+          double threeNodeShift = partialTime + edgeToI;
+          
+          // The 3 nodes as a subsequence, shifted by threeNodeShift
+          partialCost += subsequenceMatrix[i][i+2].sumWeights * threeNodeShift + 
+                         subsequenceMatrix[i][i+2].acumulateCost;
+          partialTime = threeNodeShift + subsequenceMatrix[i][i+2].totalTime;
+          
+          // Remaining segment [j+3, n]: shifted by partialTime
+          double edgeToRest = distanceMatrix[solution[i+2]][solution[j+3]];
+          double restShift = partialTime + edgeToRest;
+          cost = partialCost + 
+                 subsequenceMatrix[j+3][size-1].sumWeights * restShift +
+                 subsequenceMatrix[j+3][size-1].acumulateCost;
+                 
         }else{
-          partialCost = subsequenceMatrix[0][j-1].acumulateCost + subsequenceMatrix[0][j-1].totalTime + distanceMatrix[solution[j-1]][solution[i]];
-          partialTime = subsequenceMatrix[0][j-1].totalTime + distanceMatrix[solution[j-1]][solution[i]];
-
-          partialCost = partialCost + ((2) * (partialTime)) + subsequenceMatrix[i][i+2].acumulateCost;
-          partialTime = partialTime + subsequenceMatrix[i][i+2].totalTime;
-
-          partialCost = partialCost + partialTime + distanceMatrix[solution[i+2]][solution[j]];
-          partialTime = partialTime + distanceMatrix[solution[i+2]][solution[j]];
-
-          partialCost = partialCost + ((i-j-1) * (partialTime)) + subsequenceMatrix[j][i-1].acumulateCost;
-          partialTime = partialTime + subsequenceMatrix[j][i-1].totalTime;
-
-          cost = partialCost + ((dimension-i-2) * (partialTime + distanceMatrix[solution[i-1]][solution[i+3]])) + subsequenceMatrix[i+3][dimension].acumulateCost;
+          // Backward move: [0, j-1] → [i, i+1, i+2] → [j, i-1] → [i+3, n]
+          
+          // Segment [0, j-1]: unchanged
+          partialCost = subsequenceMatrix[0][j-1].acumulateCost;
+          partialTime = subsequenceMatrix[0][j-1].totalTime;
+          
+          // Insert the 3-node subsequence [i, i+1, i+2] at position j
+          double edgeToI = distanceMatrix[solution[j-1]][solution[i]];
+          double threeNodeShift = partialTime + edgeToI;
+          
+          // The 3 nodes as a subsequence, shifted by threeNodeShift
+          partialCost += subsequenceMatrix[i][i+2].sumWeights * threeNodeShift + 
+                         subsequenceMatrix[i][i+2].acumulateCost;
+          partialTime = threeNodeShift + subsequenceMatrix[i][i+2].totalTime;
+          
+          // Edge to middle segment [j, i-1]
+          double edgeToMiddle = distanceMatrix[solution[i+2]][solution[j]];
+          double middleShift = partialTime + edgeToMiddle;
+          
+          // Segment [j, i-1]: shifted by middleShift
+          partialCost += subsequenceMatrix[j][i-1].sumWeights * middleShift + 
+                         subsequenceMatrix[j][i-1].acumulateCost;
+          partialTime = middleShift + subsequenceMatrix[j][i-1].totalTime;
+          
+          // Remaining segment [i+3, n]: shifted by partialTime
+          // Bridge: skip nodes [i, i+1, i+2], connect i-1 to i+3
+          double edgeToRest = distanceMatrix[solution[i-1]][solution[i+3]];
+          double restShift = partialTime + edgeToRest;
+          cost = partialCost + 
+                 subsequenceMatrix[i+3][size-1].sumWeights * restShift +
+                 subsequenceMatrix[i+3][size-1].acumulateCost;
         }
 
         if(cost < bestNeighbor.bestCost){    
           bestNeighbor.iBest = i;
           bestNeighbor.jBest = j;
           bestNeighbor.bestCost = cost;
-	      }
+        }
       }
     }
   }
 
   return bestNeighbor;
 }
+
 void updatesMatrix(vector <vector <subsequenceInfo>> &subsequenceMatrix, vector <int> &solution, vector<double> &nodeWeights) { 
-  int tam = solution.size();
+  int size = solution.size();
 
   // Updates total time
-  for(int i = 0; i < tam; i++){
-    for(int j = i; j < tam; j++){
+  for(int i = 0; i < size; i++){
+    for(int j = i; j < size; j++){
       if(i == j){
         subsequenceMatrix[i][j].totalTime = 0;
         subsequenceMatrix[i][j].sumWeights = 0;
@@ -310,8 +443,8 @@ void updatesMatrix(vector <vector <subsequenceInfo>> &subsequenceMatrix, vector 
   }
 
   // Updates accumulated cost - Forward direction
-  for(int i = 0; i < tam; i++){
-    for(int j = i; j < tam; j++){ 
+  for(int i = 0; i < size; i++){
+    for(int j = i; j < size; j++){ 
       if(i == j){
         subsequenceMatrix[i][j].acumulateCost = 0;
       }else {
@@ -323,7 +456,7 @@ void updatesMatrix(vector <vector <subsequenceInfo>> &subsequenceMatrix, vector 
   }
 
   // Reverse direction
-  for(int i = tam-1; i >= 0; i--){
+  for(int i = size-1; i >= 0; i--){
     for(int j = i; j >= 0; j--){
       if(i == j){
         subsequenceMatrix[i][j].acumulateCost = 0;
@@ -337,6 +470,7 @@ void updatesMatrix(vector <vector <subsequenceInfo>> &subsequenceMatrix, vector 
 void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights){
   vector <int> neighborhoods = {0, 1, 2, 3, 4};
   neighborInfo neighbor;
+  int size = solution.size();
 
   while(!neighborhoods.empty()){
     int choosen = rand() % neighborhoods.size();
@@ -344,7 +478,7 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
     if(neighborhoods[choosen] == 0){
       neighbor = swap(solution, subsequenceMatrix, nodeWeights);
 
-      if(neighbor.bestCost < subsequenceMatrix[0][dimension].acumulateCost){
+      if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
 
         int aux = solution[neighbor.iBest];
 	      solution[neighbor.iBest] = solution[neighbor.jBest];
@@ -360,9 +494,9 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
       }
 
     }else if(neighborhoods[choosen] == 1){
-      neighbor = reinsertion(solution, subsequenceMatrix);
+      neighbor = reinsertion(solution, subsequenceMatrix, nodeWeights);
 
-      if(neighbor.bestCost < subsequenceMatrix[0][dimension].acumulateCost){
+      if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
         vector <int> solutionInicial = solution;
 
         solution.erase(solution.begin()+neighbor.iBest);
@@ -378,9 +512,9 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
       }
 
     }else if(neighborhoods[choosen] == 2){
-      neighbor = twoOpt(solution, subsequenceMatrix);
+      neighbor = twoOpt(solution, subsequenceMatrix, nodeWeights);
 
-      if(neighbor.bestCost < subsequenceMatrix[0][dimension].acumulateCost){
+      if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
 
         int aux, k = neighbor.jBest - neighbor.iBest;
 
@@ -405,9 +539,9 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
 
     }else if(neighborhoods[choosen] == 3){
 
-      neighbor = oropt2(solution, subsequenceMatrix);
+      neighbor = oropt2(solution, subsequenceMatrix, nodeWeights);
 
-      if(neighbor.bestCost < subsequenceMatrix[0][dimension].acumulateCost){
+      if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
 
         if(neighbor.iBest < neighbor.jBest){
           solution.insert(solution.begin() + neighbor.jBest + 2, solution[neighbor.iBest]); 
@@ -430,9 +564,9 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
       }   
 
     }else if(neighborhoods[choosen] == 4){
-      neighbor = oropt3(solution, subsequenceMatrix);
+      neighbor = oropt3(solution, subsequenceMatrix, nodeWeights);
 
-      if(neighbor.bestCost < subsequenceMatrix[0][dimension].acumulateCost){
+      if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
 
         if(neighbor.iBest < neighbor.jBest){
           solution.insert(solution.begin() + neighbor.jBest + 3, solution[neighbor.iBest]);
@@ -639,7 +773,7 @@ double search(int iIls, int dimension){
   vector <double> nodeWeights(dimension + 1, 1.0); // Initialize all node weights to 1.0
 
   // Test make the first node have weight 10.0
-  nodeWeights[2] = 1.0;
+  // nodeWeights[2] = 1.0;
   // Creates vector with vertices
   for(int i = 0; i < dimension; i++){
     vertices.push_back(i+1);
@@ -652,12 +786,13 @@ double search(int iIls, int dimension){
     updatesMatrix(subsequenceMatrix, currentSolution, nodeWeights); // Updates subsequence matrix with new solution
     
     bestCurrentSolution = currentSolution;
+    bestCurrentCost = subsequenceMatrix[0][currentSolution.size()-1].acumulateCost;
 
     int iterIls = 0;
     while(iterIls < iIls){
       RVND(currentSolution, subsequenceMatrix, nodeWeights);
 
-      currentCost = subsequenceMatrix[0][dimension].acumulateCost;
+      currentCost = subsequenceMatrix[0][currentSolution.size()-1].acumulateCost;
 
       if(currentCost < bestCurrentCost){
         bestCurrentSolution = currentSolution;
