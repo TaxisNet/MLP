@@ -24,16 +24,17 @@ struct neighborInfo{
 };
 
 struct subsequenceInfo{
-  double totalTime;
-  double acumulateCost;
-  double vertices;
+  double totalTime;        // T(S): Sum of distances in segment [i,j]
+  double acumulateCost;    // C(S): Already weighted cost within [i,j]
+  double sumWeights;       // W(S): Sum of all node weights in segment [i,j]
+  int vertices;            // Number of vertices in segment
 };
 
 bool compares(insertionInfo a, insertionInfo b){
   return a.cost < b.cost;
 }
 
-neighborInfo swap(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix){
+neighborInfo swap(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix , vector<double> &nodeWeights){
   double partialCost, cost, partialTime;
   int size = solution.size();
 
@@ -43,27 +44,57 @@ neighborInfo swap(vector <int> &solution, vector <vector <subsequenceInfo>> &sub
   for(int i = 1; i < size-2; i++){
     for(int j = i+1; j < size-1; j++){
       if(j == i + 1){
-        partialCost = subsequenceMatrix[0][i-1].acumulateCost + subsequenceMatrix[0][i-1].totalTime + distanceMatrix[solution[i-1]][solution[j]];
-        partialTime = subsequenceMatrix[0][i-1].totalTime + distanceMatrix[solution[i-1]][solution[j]];
-
-        partialCost = partialCost + partialTime + distanceMatrix[solution[j]][solution[i]];
-        partialTime = partialTime + distanceMatrix[solution[j]][solution[i]];
-
-        cost = partialCost + ((dimension-j) * (partialTime + distanceMatrix[solution[i]][solution[j+1]])) + subsequenceMatrix[j+1][dimension].acumulateCost;
+      // Adjacent swap: positions i and i+1
+        
+        // Segment [0, i-1]: unchanged
+        partialCost = subsequenceMatrix[0][i-1].acumulateCost;
+        partialTime = subsequenceMatrix[0][i-1].totalTime;
+        
+        // Node j arrives at partialTime + d[i-1→j]
+        double newEdge1 = distanceMatrix[solution[i-1]][solution[j]];
+        partialTime += newEdge1;
+        partialCost += nodeWeights[solution[j]] * partialTime;
+        
+        // Node i arrives after j
+        double newEdge2 = distanceMatrix[solution[j]][solution[i]];
+        partialTime += newEdge2;
+        partialCost += nodeWeights[solution[i]] * partialTime;
+        
+        // Remaining segment [j+1, n]: shift by partialTime
+        double edgeToNext = distanceMatrix[solution[i]][solution[j+1]];
+        cost = partialCost + 
+               subsequenceMatrix[j+1][dimension].sumWeights * (partialTime + edgeToNext) +
+               subsequenceMatrix[j+1][dimension].acumulateCost;
       }else{
-        partialCost = subsequenceMatrix[0][i-1].acumulateCost + subsequenceMatrix[0][i-1].totalTime + distanceMatrix[solution[i-1]][solution[j]];
-        partialTime = subsequenceMatrix[0][i-1].totalTime + distanceMatrix[solution[i-1]][solution[j]];
-
-        partialCost = partialCost + partialTime + distanceMatrix[solution[j]][solution[i+1]];
-        partialTime = partialTime + distanceMatrix[solution[j]][solution[i+1]];
-
-        partialCost = partialCost + ((j-i-2) * (partialTime)) + subsequenceMatrix[i+1][j-1].acumulateCost;
-        partialTime = partialTime + subsequenceMatrix[i+1][j-1].totalTime;
-
-        partialCost = partialCost + partialTime + distanceMatrix[solution[j-1]][solution[i]];
-        partialTime = partialTime + distanceMatrix[solution[j-1]][solution[i]];
-
-        cost = partialCost + ((dimension-j) * (partialTime + distanceMatrix[solution[i]][solution[j+1]])) + subsequenceMatrix[j+1][dimension].acumulateCost;
+        // Non-adjacent swap
+        
+        // Segment [0, i-1]: unchanged
+        partialCost = subsequenceMatrix[0][i-1].acumulateCost;
+        partialTime = subsequenceMatrix[0][i-1].totalTime;
+        
+        // Node j arrives first
+        double newEdge1 = distanceMatrix[solution[i-1]][solution[j]];
+        partialTime += newEdge1;
+        partialCost += nodeWeights[solution[j]] * partialTime;
+        
+        // Middle segment [i+1, j-1]: shifted by partialTime
+        double edgeToMiddle = distanceMatrix[solution[j]][solution[i+1]];
+        double middleShift = partialTime + edgeToMiddle;
+        partialCost += subsequenceMatrix[i+1][j-1].sumWeights * middleShift + 
+                       subsequenceMatrix[i+1][j-1].acumulateCost;
+        partialTime = middleShift + subsequenceMatrix[i+1][j-1].totalTime;
+        
+        // Node i arrives after middle segment
+        double edgeToI = distanceMatrix[solution[j-1]][solution[i]];
+        partialTime += edgeToI;
+        partialCost += nodeWeights[solution[i]] * partialTime;
+        
+        // Remaining segment [j+1, n]: shifted by partialTime
+        double edgeToRest = distanceMatrix[solution[i]][solution[j+1]];
+        double restShift = partialTime + edgeToRest;
+        cost = partialCost + 
+               subsequenceMatrix[j+1][dimension].sumWeights * restShift +
+               subsequenceMatrix[j+1][dimension].acumulateCost;
       }
 
       if(cost < bestNeighbor.bestCost){    
@@ -253,9 +284,7 @@ neighborInfo oropt3(vector <int> &solution, vector <vector <subsequenceInfo>> &s
 
   return bestNeighbor;
 }
-
-// Function to update subsequence matrix with a new solution
-void updatesMatrix(vector <vector <subsequenceInfo>> &subsequenceMatrix, vector <int> &solution){
+void updatesMatrix(vector <vector <subsequenceInfo>> &subsequenceMatrix, vector <int> &solution, vector<double> &nodeWeights) { 
   int tam = solution.size();
 
   // Updates total time
@@ -263,36 +292,49 @@ void updatesMatrix(vector <vector <subsequenceInfo>> &subsequenceMatrix, vector 
     for(int j = i; j < tam; j++){
       if(i == j){
         subsequenceMatrix[i][j].totalTime = 0;
+        subsequenceMatrix[i][j].sumWeights = 0;
+        subsequenceMatrix[i][j].vertices = 0;
       }else {
         subsequenceMatrix[i][j].totalTime = subsequenceMatrix[i][j-1].totalTime + distanceMatrix[solution[j-1]][solution[j]];
-        subsequenceMatrix[j][i].totalTime = subsequenceMatrix[i][j].totalTime;  
+        subsequenceMatrix[j][i].totalTime = subsequenceMatrix[i][j].totalTime; 
+        
+        // Sum of weights from position i to j
+        subsequenceMatrix[i][j].sumWeights = subsequenceMatrix[i][j-1].sumWeights + nodeWeights[solution[j]];
+        subsequenceMatrix[j][i].sumWeights = subsequenceMatrix[i][j].sumWeights;
+        
+        // Number of vertices from position i to j
+        subsequenceMatrix[i][j].vertices = j - i;
+        subsequenceMatrix[j][i].vertices = subsequenceMatrix[i][j].vertices;
       }
     }
   }
 
-  // Updates acumulate cost
+  // Updates accumulated cost - Forward direction
   for(int i = 0; i < tam; i++){
     for(int j = i; j < tam; j++){ 
       if(i == j){
         subsequenceMatrix[i][j].acumulateCost = 0;
       }else {
-        subsequenceMatrix[i][j].acumulateCost = subsequenceMatrix[i][j-1].acumulateCost + subsequenceMatrix[i][j].totalTime;
+        // Weight of node at position j times its arrival time from position i
+        //  nodeWeights[solution[j]] is the weight of the actual node
+        subsequenceMatrix[i][j].acumulateCost = subsequenceMatrix[i][j-1].acumulateCost + nodeWeights[solution[j]] * subsequenceMatrix[i][j].totalTime;
       }      
     }
   }
 
+  // Reverse direction
   for(int i = tam-1; i >= 0; i--){
     for(int j = i; j >= 0; j--){
       if(i == j){
         subsequenceMatrix[i][j].acumulateCost = 0;
       }else{
-        subsequenceMatrix[i][j].acumulateCost = subsequenceMatrix[i][j+1].acumulateCost + subsequenceMatrix[i][j].totalTime;
+        subsequenceMatrix[i][j].acumulateCost = subsequenceMatrix[i][j+1].acumulateCost + nodeWeights[solution[j]] * subsequenceMatrix[i][j].totalTime;
       }      
     }
   }
 }
 
-void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix){
+void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights){
   vector <int> neighborhoods = {0, 1, 2, 3, 4};
   neighborInfo neighbor;
 
@@ -300,7 +342,7 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
     int choosen = rand() % neighborhoods.size();
 
     if(neighborhoods[choosen] == 0){
-      neighbor = swap(solution, subsequenceMatrix);
+      neighbor = swap(solution, subsequenceMatrix, nodeWeights);
 
       if(neighbor.bestCost < subsequenceMatrix[0][dimension].acumulateCost){
 
@@ -309,7 +351,7 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
 	      solution[neighbor.jBest] = aux;
 
         // Updates subsequence matrix with new solution
-        updatesMatrix(subsequenceMatrix, solution);
+        updatesMatrix(subsequenceMatrix, solution, nodeWeights);
         neighborhoods = {0, 1, 2, 3, 4};
 
       } else {
@@ -327,7 +369,7 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
         solution.insert(solution.begin()+neighbor.jBest, solutionInicial[neighbor.iBest]);
 
         // Updates subsequence matrix with new solution
-        updatesMatrix(subsequenceMatrix, solution);
+        updatesMatrix(subsequenceMatrix, solution, nodeWeights);
         neighborhoods = {0, 1, 2, 3, 4};
 
       } else {
@@ -353,7 +395,7 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
         }
 
         // Updates subsequence matrix with new solution
-        updatesMatrix(subsequenceMatrix, solution);
+        updatesMatrix(subsequenceMatrix, solution, nodeWeights);
         neighborhoods = {0, 1, 2, 3, 4};
 
       } else {
@@ -380,7 +422,7 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
         }
 
         // Updates subsequence matrix with new solution
-        updatesMatrix(subsequenceMatrix, solution);
+        updatesMatrix(subsequenceMatrix, solution, nodeWeights);
         neighborhoods = {0, 1, 2, 3, 4};
 
       } else {
@@ -409,7 +451,7 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
         }
 
         // Updates subsequence matrix with new solution
-        updatesMatrix(subsequenceMatrix, solution);
+        updatesMatrix(subsequenceMatrix, solution, nodeWeights);
         neighborhoods = {0, 1, 2, 3, 4};
 
       } else {
@@ -594,7 +636,10 @@ double search(int iIls, int dimension){
   double bestCurrentCost = DBL_MAX, currentCost, finalCost = DBL_MAX;
   vector <int> vertices, bestCurrentSolution, currentSolution, finalSolution;
   vector <vector <subsequenceInfo>> subsequenceMatrix(dimension+1, vector <subsequenceInfo> (dimension+1));
+  vector <double> nodeWeights(dimension + 1, 1.0); // Initialize all node weights to 1.0
 
+  // Test make the first node have weight 10.0
+  nodeWeights[2] = 1.0;
   // Creates vector with vertices
   for(int i = 0; i < dimension; i++){
     vertices.push_back(i+1);
@@ -604,13 +649,13 @@ double search(int iIls, int dimension){
     double alpha = (rand() % 90) / 100.0 + 0.1;
 
     currentSolution = construction(vertices, alpha); // Generates initial solution
-    updatesMatrix(subsequenceMatrix, currentSolution);
-
+    updatesMatrix(subsequenceMatrix, currentSolution, nodeWeights); // Updates subsequence matrix with new solution
+    
     bestCurrentSolution = currentSolution;
 
     int iterIls = 0;
     while(iterIls < iIls){
-      RVND(currentSolution, subsequenceMatrix);
+      RVND(currentSolution, subsequenceMatrix, nodeWeights);
 
       currentCost = subsequenceMatrix[0][dimension].acumulateCost;
 
@@ -621,7 +666,7 @@ double search(int iIls, int dimension){
       }
 
       currentSolution = pertub(bestCurrentSolution);
-      updatesMatrix(subsequenceMatrix, currentSolution);
+      updatesMatrix(subsequenceMatrix, currentSolution, nodeWeights);
 
       iterIls++;
     }
