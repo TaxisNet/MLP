@@ -77,7 +77,7 @@ void readData( int argc, char** argv, int* Dimension, double ***Mdist )
         in >> ewf;
 
         if ( ewf == "FUNCTION" ) {
-            cout << "FUNCTION - Nao suportado!" << endl; }
+            cout << "FUNCTION - Not supported!" << endl; }
 
         else if ( ewf == "FULL_MATRIX" ) {
 
@@ -85,7 +85,6 @@ void readData( int argc, char** argv, int* Dimension, double ***Mdist )
                 in >> arquivo;
             }
 
-            // Preencher Matriz Distancia
             for ( int i = 1; i < N+1; i++ ) {
                 for ( int j = 1; j < N+1; j++ ) {
                     in >> dist[i][j];
@@ -239,13 +238,13 @@ void readData( int argc, char** argv, int* Dimension, double ***Mdist )
         while ( arquivo.compare("NODE_COORD_SECTION") != 0 ) {
             in >> arquivo;
         }
-        // ler coordenadas
+        // read coordinates
         int tempCity;
         for ( int i = 1; i < N+1; i++ ) {
             in >> tempCity >> x[i] >> y[i];
         }
 
-        // Calcular Matriz Distancia (Euclidiana)
+        // Calculate Distance Matrix (Euclidian)
         for ( int i = 1; i < N+1; i++ ) {
             for ( int j = 1; j < N+1; j++ ) {
                 dist[i][j] = floor ( CalcDistEuc ( x, y, i, j ) + 0.5 );
@@ -254,32 +253,32 @@ void readData( int argc, char** argv, int* Dimension, double ***Mdist )
     }
 
     else if ( ewt == "EUD_3D" ) {
-        cout << "EUC_3D - Nao suportado!" << endl; }
+        cout << "EUC_3D - Not supported!" << endl; }
 
     else if ( ewt == "MAX_2D" ) {
-        cout << "MAX_2D - Nao suportado!" << endl; }
+        cout << "MAX_2D - Not supported!" << endl; }
 
     else if ( ewt == "MAX_3D" ) {
-        cout << "MAX_3D - Nao Suportado!" << endl; }
+        cout << "MAX_3D - Not supported!" << endl; }
 
     else if ( ewt == "MAN_2D" ) {
-        cout << "MAN_2D - Nao suportado!" << endl; }
+        cout << "MAN_2D - Not supported!" << endl; }
 
     else if ( ewt == "MAN_3D" ) {
-        cout << "MAN_3D - Nao Suportado!" << endl; }
+        cout << "MAN_3D - Not supported!" << endl; }
 
     else if ( ewt == "CEIL_2D" ) {
 
         while ( arquivo.compare("NODE_COORD_SECTION") != 0 ) {
             in >> arquivo;
         }
-        // ler coordenadas
+        // read coordinates
         int tempCity;
         for ( int i = 1; i < N+1; i++ ) {
             in >> tempCity >> x[i] >> y[i];
         }
 
-        // Calcular Matriz Distancia (Euclidiana)
+        // Calculate Distance Matrix (Euclidiana)
         for ( int i = 1; i < N+1; i++ ) {
             for ( int j = 1; j < N+1; j++ ) {
                 dist[i][j] = ceil ( CalcDistEuc ( x, y, i, j ) );
@@ -292,7 +291,7 @@ void readData( int argc, char** argv, int* Dimension, double ***Mdist )
         while ( arquivo.compare("NODE_COORD_SECTION") != 0 ) {
             in >> arquivo;
         }
-        // ler coordenadas
+        // read coordinates
         int tempCity;
         for ( int i = 1; i < N+1; i++ ) {
             in >> tempCity >> x[i] >> y[i];
@@ -303,7 +302,7 @@ void readData( int argc, char** argv, int* Dimension, double ***Mdist )
 
         CalcLatLong ( x, y, N, latitude, longitude );
 
-        // Calcular Matriz Distancia
+        // Calculate Distance Matrix
         for ( int i = 1; i < N+1; i++ ) {
             for ( int j = 1; j < N+1; j++ ) {
                 dist[i][j] = CalcDistGeo ( latitude, longitude, i, j );
@@ -318,7 +317,7 @@ void readData( int argc, char** argv, int* Dimension, double ***Mdist )
             in >> arquivo;
         }
 
-        // ler coordenadas
+        // read coordinates
         int tempCity;
         int *tempX = new int [N+1];
         int *tempY = new int [N+1];
@@ -329,7 +328,7 @@ void readData( int argc, char** argv, int* Dimension, double ***Mdist )
             y[i]=tempY[i];
         }
 
-        // Calcular Matriz Distancia (Pesudo-Euclidiana)
+        // Calculate Distance Matrix (Pesudo-Euclidian)
         for ( int i = 1; i < N+1; i++ ) {
             for ( int j = 1; j < N+1; j++ ) {
                 dist[i][j] = CalcDistAtt ( x, y, i, j );
@@ -339,13 +338,13 @@ void readData( int argc, char** argv, int* Dimension, double ***Mdist )
     }
 
     else if ( ewt == "XRAY1" ) {
-        cout << "XRAY1 - Nao suportado!" << endl; }
+        cout << "XRAY1 - Not supported!" << endl; }
 
     else if ( ewt == "XRAY2" ) {
-        cout << "XRAY2 - Nao suportado!" << endl; }
+        cout << "XRAY2 - Not supported!" << endl; }
 
     else if ( ewt == "SPECIAL" ) {
-        cout << "SPECIAL - Nao suportado!" << endl; }
+        cout << "SPECIAL - Not supported!" << endl; }
 
     *Dimension = N;
     *Mdist = dist;
@@ -359,7 +358,7 @@ double CalcDistEuc ( double *X, double *Y, int I, int J )
 
 double CalcDistAtt ( double *X, double *Y, int I, int J )
 {
-    // Calcula Pseudo Distancia Euclidiana
+    // Calculate Pseudo Euclidian Distance 
     double rij, tij, dij;
 
     rij = sqrt ( ( pow ( X[I] - X[J], 2 ) + pow ( Y[I] - Y[J], 2 ) ) / 10 );
