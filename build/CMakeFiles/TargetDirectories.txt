@@ -1,3 +1,0 @@
-/home/taxis/Documents/MLP/build/CMakeFiles/mlp.dir
-/home/taxis/Documents/MLP/build/CMakeFiles/edit_cache.dir
-/home/taxis/Documents/MLP/build/CMakeFiles/rebuild_cache.dir
