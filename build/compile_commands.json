@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/taxis/Documents/MLP/build",
+  "command": "/usr/bin/g++  -I/home/taxis/Documents/MLP/src -g -std=gnu++11 -o CMakeFiles/mlp.dir/src/main.cpp.o -c /home/taxis/Documents/MLP/src/main.cpp",
+  "file": "/home/taxis/Documents/MLP/src/main.cpp",
+  "output": "CMakeFiles/mlp.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/taxis/Documents/MLP/build",
+  "command": "/usr/bin/g++  -I/home/taxis/Documents/MLP/src -g -std=gnu++11 -o CMakeFiles/mlp.dir/src/readData.cpp.o -c /home/taxis/Documents/MLP/src/readData.cpp",
+  "file": "/home/taxis/Documents/MLP/src/readData.cpp",
+  "output": "CMakeFiles/mlp.dir/src/readData.cpp.o"
+}
+]

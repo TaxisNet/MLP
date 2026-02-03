@@ -1,0 +1,1 @@
+/usr/bin/g++ -g CMakeFiles/mlp.dir/src/main.cpp.o CMakeFiles/mlp.dir/src/readData.cpp.o -o mlp 
