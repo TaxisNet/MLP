@@ -425,8 +425,8 @@ void updatesMatrix(vector <vector <subsequenceInfo>> &subsequenceMatrix, vector 
     for(int j = i; j < size; j++){
       if(i == j){
         subsequenceMatrix[i][j].totalTime = 0;
-        subsequenceMatrix[i][j].sumWeights = 0;
-        subsequenceMatrix[i][j].vertices = 0;
+        subsequenceMatrix[i][j].sumWeights = nodeWeights[solution[i]];
+        subsequenceMatrix[i][j].vertices = 1;
       }else {
         subsequenceMatrix[i][j].totalTime = subsequenceMatrix[i][j-1].totalTime + distanceMatrix[solution[j-1]][solution[j]];
         subsequenceMatrix[j][i].totalTime = subsequenceMatrix[i][j].totalTime; 
@@ -602,22 +602,32 @@ vector <int> pertub(vector <int> &solution){
 	vector <int> secondSubsequence;
 	int i, j, sizeFirst = 0, sizeSecond = 0, size = solution.size();
 	
-	// Generates subsequence sizes
-	if(size < 20){
-		sizeFirst = 2;
-		sizeSecond = 2;
-	} else {
-		while(sizeFirst < 2 || sizeFirst > (size/10)) sizeFirst = rand() % size;
-		while(sizeSecond < 2 || sizeSecond > (size/10)) sizeSecond = rand() % size; 
-	}
-	
-	// Generates initial position of first subsequence
-	i = rand() % (size - sizeFirst);
-  while(i == 0) i = rand() % (size - sizeFirst);
+ // Available positions exclude depot at 0 and last index
+  int freeSlots = size - 2;
+  if (freeSlots <= 4) {
+    return solution; // not enough space for two non-overlapping length-2 blocks
+  }
 
-	// Generates initial position of second subsequence
-	j = rand() % (size - sizeSecond);
-	while((j > (i - sizeSecond) && j < (i + sizeFirst)) || j == 0) j = rand() % (size - sizeSecond);
+  if (size < 20) {
+    sizeFirst = 2;
+    sizeSecond = 2;
+  } else {
+    while(sizeFirst < 2 || sizeFirst > (freeSlots/2)) sizeFirst = rand() % freeSlots;
+    while(sizeSecond < 2 || sizeSecond > (freeSlots/2)) sizeSecond = rand() % freeSlots;
+  }
+
+  // Ensure they fit
+  while (sizeFirst + sizeSecond > freeSlots) {
+    if (sizeFirst > 2) sizeFirst--;
+    if (sizeSecond > 2) sizeSecond--;
+  }
+
+  // i and j must be in [1, size-2] and non-overlapping
+  i = 1 + rand() % (freeSlots - sizeFirst + 1);
+  do {
+    j = 1 + rand() % (freeSlots - sizeSecond + 1);
+  } while (!(j + sizeSecond - 1 < i || i + sizeFirst - 1 < j));
+
 
 	// Creates vector with first subsequence
 	int iter = 0;
@@ -750,7 +760,7 @@ vector <int> construction(vector <int> candidatesList, double alpha){
     // Orders insertion costs
     sort(insertionCost.begin(), insertionCost.end(), compares);
 
-    int elements = alpha * insertionCost.size();
+    int elements = max(1, (int)(alpha * insertionCost.size())); // Bugfix: ensure at least one element is chosen
     int i = rand() % elements;
 
     // Inserts choosen node
@@ -799,11 +809,15 @@ double search(int iIls, int dimension){
         bestCurrentCost = currentCost;
         iterIls = 0;
       }
+      else{
+        iterIls++;
+      }
 
+      cout<<iterIls<<":"<<iIls<<": "<<bestCurrentCost<<" "<< currentCost<<endl;
       currentSolution = pertub(bestCurrentSolution);
       updatesMatrix(subsequenceMatrix, currentSolution, nodeWeights);
 
-      iterIls++;
+      // iterIls++;<<< is this a bug? added the else above
     }
 
     if(bestCurrentCost < finalCost){
@@ -825,6 +839,8 @@ int main(int argc, char** argv) {
   clock_t start = clock(); // Starts time counting
     
   readData(argc, argv, &dimension, &distanceMatrix);
+  // useStaticInstance();
+
   srand(time(NULL));
 
   int iIls;
@@ -834,7 +850,7 @@ int main(int argc, char** argv) {
   } else {
     iIls = dimension;
   }
-
+  cout << "iIls: " << iIls << endl;
   double cost = search(iIls, dimension);
 
   // Ends time counting
