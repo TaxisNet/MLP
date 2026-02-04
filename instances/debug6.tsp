@@ -1,7 +1,7 @@
-NAME: debug5
+NAME: debug6
 TYPE: TSP
-COMMENT: Minimal 5-city TSP for debugging and testing
-DIMENSION: 5
+COMMENT: Minimal 6-city TSP for debugging and testing
+DIMENSION: 6
 EDGE_WEIGHT_TYPE: EUC_2D
 NODE_COORD_SECTION
 1  0.0  0.0
@@ -9,4 +9,5 @@ NODE_COORD_SECTION
 3  1000.0  1000.0
 4  0.0  1000.0
 5  500.0  500.0
+6  20000.0  20000.0
 EOF

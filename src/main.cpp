@@ -780,10 +780,10 @@ double search(int iIls, int dimension){
   double bestCurrentCost = DBL_MAX, currentCost, finalCost = DBL_MAX;
   vector <int> vertices, bestCurrentSolution, currentSolution, finalSolution;
   vector <vector <subsequenceInfo>> subsequenceMatrix(dimension+1, vector <subsequenceInfo> (dimension+1));
+  
+  // nodeWeights[i] represents the weight of node i (so is also 1-indexed)
   vector <double> nodeWeights(dimension + 1, 1.0); // Initialize all node weights to 1.0
 
-  // Test make the first node have weight 10.0
-  // nodeWeights[2] = 1.0;
   // Creates vector with vertices
   for(int i = 0; i < dimension; i++){
     vertices.push_back(i+1);
@@ -839,7 +839,6 @@ int main(int argc, char** argv) {
   clock_t start = clock(); // Starts time counting
     
   readData(argc, argv, &dimension, &distanceMatrix);
-  // useStaticInstance();
 
   srand(time(NULL));
 
