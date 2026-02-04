@@ -799,8 +799,8 @@ vector <int> construction(vector <int> candidatesList, double alpha){
   while(!candidatesList.empty()){
     vector <insertionInfo> insertionCost((initialSolution.size()) * candidatesList.size());
 
-    for(int i = 0, j = 1, k = 0; i < initialSolution.size(); i++, j++){
-      for(auto l : candidatesList){
+    for (int i = 0, j = 1, k = 0; i < initialSolution.size(); i++, j++) {
+      for (auto l : candidatesList) {
         if (j == initialSolution.size()){
           insertionCost[k].cost = distanceMatrix[initialSolution[i]][l];
         }
@@ -833,6 +833,48 @@ vector <int> construction(vector <int> candidatesList, double alpha){
   }
 
   return initialSolution;
+}
+
+vector<int> constructionSmith(vector<int> candidatesList,
+                              const vector<double>& nodeWeights) {
+  vector<int> solution;
+
+  // Start at depot (assumes candidatesList[0] is depot)
+  int depot = candidatesList[0];
+  solution.push_back(depot);
+  candidatesList.erase(candidatesList.begin());
+
+  int current = depot;
+
+  while (!candidatesList.empty()) {
+    int bestIndex = 0;
+    double bestScore = DBL_MAX;
+
+    vector<pair<double,int>> scored;
+    scored.reserve(candidatesList.size());
+
+    for (int i = 0; i < (int)candidatesList.size(); i++) {
+      int v = candidatesList[i];
+      double w = nodeWeights[v];
+      double p = distanceMatrix[current][v];
+      double score = (w > 0.0) ? (p / w) : DBL_MAX;
+      scored.push_back({score, i});
+    }
+
+    sort(scored.begin(), scored.end(),
+        [](pair<double,int>& a, pair<double,int>& b){ return a.first < b.first; });
+
+    // pick random from top-K
+    int K = max(1, (int)(0.2 * scored.size())); // 20% RCL
+    int pick = rand() % K;
+    int pickedIndex = scored[pick].second;
+
+    current = candidatesList[pickedIndex];
+    solution.push_back(current);
+    candidatesList.erase(candidatesList.begin() + pickedIndex);
+  }
+
+  return solution;
 }
 
 double search(int iIls, int dimension){
