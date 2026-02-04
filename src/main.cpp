@@ -732,7 +732,6 @@ vector <int> construction(vector <int> candidatesList, double alpha){
 
   // Insert depot
   initialSolution.push_back(candidatesList[0]);
-  initialSolution.push_back(candidatesList[0]);
 
   // Deletes it from candidates list
   candidatesList.erase(candidatesList.begin());
@@ -746,11 +745,19 @@ vector <int> construction(vector <int> candidatesList, double alpha){
 
   // Calculates insertion cost of vertices on solution
   while(!candidatesList.empty()){
-    vector <insertionInfo> insertionCost((initialSolution.size()-1) * candidatesList.size());
+    vector <insertionInfo> insertionCost((initialSolution.size()) * candidatesList.size());
 
-    for(int i = 0, j = 1, k = 0; i < initialSolution.size()-1; i++, j++){
+    for(int i = 0, j = 1, k = 0; i < initialSolution.size(); i++, j++){
       for(auto l : candidatesList){
-        insertionCost[k].cost = distanceMatrix[initialSolution[i]][l] + distanceMatrix[initialSolution[j]][l] - distanceMatrix[initialSolution[i]][initialSolution[j]];
+        if (j == initialSolution.size()){
+          insertionCost[k].cost = distanceMatrix[initialSolution[i]][l];
+        }
+        else{
+          insertionCost[k].cost = 
+          distanceMatrix[initialSolution[i]][l] +
+          distanceMatrix[initialSolution[j]][l] - 
+          distanceMatrix[initialSolution[i]][initialSolution[j]];
+        }
         insertionCost[k].insertedNode = l;
         insertionCost[k].deletedEdge = i;
         k++;
