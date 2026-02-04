@@ -653,10 +653,10 @@ vector <int> pertub(vector <int> &solution){
 	vector <int> firstSubsequence;
 	vector <int> secondSubsequence;
 	int i, j, sizeFirst = 0, sizeSecond = 0, size = solution.size();
-	
- // Available positions exclude depot at 0 and last index
-  int freeSlots = size - 2;
-  if (freeSlots <= 4) {
+  // Double Bridge: Randomly selects two non-overlapping subsequences of size at least 2 and swaps them
+  // Available positions exclude depot at 0
+  int freeSlots = size - 1;
+  if (freeSlots <= 3) {
     return solution; // not enough space for two non-overlapping length-2 blocks
   }
 
@@ -674,7 +674,7 @@ vector <int> pertub(vector <int> &solution){
     if (sizeSecond > 2) sizeSecond--;
   }
 
-  // i and j must be in [1, size-2] and non-overlapping
+  // i and j must be in [1, size-1] and non-overlapping
   i = 1 + rand() % (freeSlots - sizeFirst + 1);
   do {
     j = 1 + rand() % (freeSlots - sizeSecond + 1);
