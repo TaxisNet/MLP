@@ -7,16 +7,23 @@
 #include <cfloat>
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
+#include <ctime>
 
-
-double search(int iIls, int dimension){
+double search(int iIls, int dimension, vector<double> &nodeWeights,
+              vector<int>* outSolution, bool verbose) {
   double bestCurrentCost = DBL_MAX, currentCost, finalCost = DBL_MAX;
   vector <int> vertices, bestCurrentSolution, currentSolution, finalSolution;
   vector <vector <subsequenceInfo>> subsequenceMatrix(dimension+1, vector <subsequenceInfo> (dimension+1));
   
-  // nodeWeights[i] represents the weight of node i (so is also 1-indexed)
-  vector <double> nodeWeights(dimension + 1, 1.0); // Initialize all node weights to 1.0
-  // Creates vector with vertices
+  // time variables
+  clock_t start = 0; clock_t end=0;
+
+  if (verbose) {
+    clock_t start = clock(); // Starts time counting
+  }
+
+  // Creates a list of vertices from 1 to dimension (so is also 1-indexed)
   for(int i = 0; i < dimension; i++){
     vertices.push_back(i+1);
   }
@@ -45,11 +52,8 @@ double search(int iIls, int dimension){
         iterIls++;
       }
 
-      // cout<<iterIls<<":"<<iIls<<": "<<bestCurrentCost<<" "<< currentCost<<endl;
       currentSolution = pertub(bestCurrentSolution);
       updatesMatrix(subsequenceMatrix, currentSolution, nodeWeights);
-
-      // iterIls++;<<< is this a bug? added the else above
     }
 
     if(bestCurrentCost < finalCost){
@@ -58,9 +62,22 @@ double search(int iIls, int dimension){
     }
   }
 
-  cout << endl << "Solution: ";
-  for(int i = 0; i < finalSolution.size(); i++){
-    cout << finalSolution[i] << " ";
+  if (outSolution) {
+    *outSolution = finalSolution;
+  }
+
+  if (verbose) {
+    clock_t end = clock(); // Ends time counting
+    double time = ((double) (end - start)) / CLOCKS_PER_SEC;
+    cout << "Search time: " << setprecision( time<2.0? 3 : 2) <<time << " seconds." << endl;
+    cout << "Final Cost: " << setprecision(finalCost<10e2 ? 0: 3) << finalCost << endl;
+    setprecision(cout.precision());
+    cout << "Solution: [";
+    for(int i = 0; i < finalSolution.size(); i++){
+      cout << finalSolution[i] << " ";
+    }
+    cout <<"]" << endl;
+
   }
 
   return finalCost;  

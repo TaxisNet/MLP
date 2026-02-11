@@ -39,15 +39,19 @@ int main(int argc, char** argv) {
   } else {
     iIls = dimension;
   }
-  // cout << "iIls: " << iIls << endl;
-  double cost = search(iIls, dimension);
+
+  // nodeWeights[i] represents the weight of node i (so is also 1-indexed)
+  vector <double> nodeWeights(dimension + 1, 1.0); // Initialize all node weights to 1.0
+  
+  
+  double cost = search(iIls, dimension, nodeWeights);
 
   // Ends time counting
   clock_t end = clock();
   double time = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-  cout << endl << "Cost: " << cost << endl;
-  cout << "Time: " << time << endl << endl;
+  // cout << endl << "Cost: " << cost << endl;
+  // cout << "Time: " << time << endl << endl;
     
   return 0;
 

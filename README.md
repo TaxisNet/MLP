@@ -66,3 +66,25 @@ sh run.sh
 ```
 
 *Note: Ensure the script targets the correct executable (`./mlp`). You may need to update `run.sh` if it references an older executable name.*
+
+
+## Python Bindings (pybind11)
+
+### Prerequisites
+- CMake 3.10+
+- A C++ compiler (C++11)
+- Python 3 with `numpy`
+
+### Build the Python Module
+
+```bash
+cmake -S . -B build
+cmake --build build -j
+```
+
+### Using the Python Module
+```python
+# also include the build directory in your PYTHONPATH if necessary
+# PYTHONPATH=build python3 python_example.py  
+import mlp_py
+```

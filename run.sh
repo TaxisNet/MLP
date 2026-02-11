@@ -2,7 +2,8 @@
 
 echo "--MLP Benchmark--"
 
-make
+cmake -S . -B build
+cmake --build build --config Release
 
 k=1
 for instance in instances/*; do
@@ -12,7 +13,7 @@ for instance in instances/*; do
 	echo "Instance $k of 23" 
 
 	for i in {1..10}; do
-		./tsp ${instance} | grep 'Custo\|Tempo' | awk "{print $1}" >> ./benchmark/bm.txt
+		./build/mlp ${instance} | grep 'Custo\|Tempo' | awk "{print $1}" >> ./benchmark/bm.txt
 	done
 
 	k=$(($k + 1))
