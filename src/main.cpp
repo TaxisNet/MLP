@@ -674,12 +674,36 @@ vector <int> pertub(vector <int> &solution){
     if (sizeSecond > 2) sizeSecond--;
   }
 
-  // i and j must be in [1, size-1] and non-overlapping
-  i = 1 + rand() % (freeSlots - sizeFirst + 1);
-  do {
-    j = 1 + rand() % (freeSlots - sizeSecond + 1);
-  } while (!(j + sizeSecond - 1 < i || i + sizeFirst - 1 < j));
+// i and j must be in [1, size-1] and non-overlapping
+int maxI = freeSlots - sizeFirst + 1;
+int maxJ = freeSlots - sizeSecond + 1;
 
+i = 1 + rand() % maxI;
+
+int leftMax = i - sizeSecond;
+int rightMin = i + sizeFirst;
+
+bool hasLeft = leftMax >= 1;
+bool hasRight = rightMin <= maxJ;
+
+if (!hasLeft && !hasRight) {
+  // if sizeFirst and sizeSecond are too large to fit on either side of i, we need to choose a new i
+  do { i = 1 + rand() % maxI;
+       leftMax = i - sizeSecond;
+       rightMin = i + sizeFirst;
+       hasLeft = leftMax >= 1;
+       hasRight = rightMin <= maxJ;
+  } while (!hasLeft && !hasRight);
+}
+
+if (hasLeft && hasRight) {
+  if (rand() % 2 == 0) j = 1 + rand() % leftMax;
+  else j = rightMin + rand() % (maxJ - rightMin + 1);
+} else if (hasLeft) {
+  j = 1 + rand() % leftMax;
+} else {
+  j = rightMin + rand() % (maxJ - rightMin + 1);
+}
 
 	// Creates vector with first subsequence
 	int iter = 0;
@@ -884,7 +908,6 @@ double search(int iIls, int dimension){
   
   // nodeWeights[i] represents the weight of node i (so is also 1-indexed)
   vector <double> nodeWeights(dimension + 1, 1.0); // Initialize all node weights to 1.0
-
   // Creates vector with vertices
   for(int i = 0; i < dimension; i++){
     vertices.push_back(i+1);
@@ -914,7 +937,7 @@ double search(int iIls, int dimension){
         iterIls++;
       }
 
-      cout<<iterIls<<":"<<iIls<<": "<<bestCurrentCost<<" "<< currentCost<<endl;
+      // cout<<iterIls<<":"<<iIls<<": "<<bestCurrentCost<<" "<< currentCost<<endl;
       currentSolution = pertub(bestCurrentSolution);
       updatesMatrix(subsequenceMatrix, currentSolution, nodeWeights);
 
@@ -938,8 +961,13 @@ double search(int iIls, int dimension){
 int main(int argc, char** argv) {
 
   clock_t start = clock(); // Starts time counting
-    
+  
+
+  // Make a fake command line argument list
+  // char* fake_argv[] = {(char*)"main", (char*)"/home/taxis/Documents/MLP/instances/rd100.tsp"};
+  
   readData(argc, argv, &dimension, &distanceMatrix);
+  // readData(2, fake_argv, &dimension, &distanceMatrix);
 
   srand(time(NULL));
 
@@ -950,7 +978,7 @@ int main(int argc, char** argv) {
   } else {
     iIls = dimension;
   }
-  cout << "iIls: " << iIls << endl;
+  // cout << "iIls: " << iIls << endl;
   double cost = search(iIls, dimension);
 
   // Ends time counting
