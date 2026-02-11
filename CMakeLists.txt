@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(mlp
     src/main.cpp
     src/readData.cpp
+    src/search.cpp
+    src/construction.cpp
+    src/neighborhoods.cpp
 )
 
 target_include_directories(mlp PRIVATE src)
