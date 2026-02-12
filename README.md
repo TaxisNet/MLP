@@ -83,8 +83,17 @@ cmake --build build -j
 ```
 
 ### Using the Python Module
+To run the Python example, ensure you have the built module in your `PYTHONPATH`. Examples of running the Python code:
+
+```bash
+PYTHONPATH=build python3 examples/mlp_example.py
+```
+
+
+To import the module in your Python code, use:
 ```python
-# also include the build directory in your PYTHONPATH if necessary
-# PYTHONPATH=build python3 python_example.py  
+# add to PYTHONPATH
+import sys
+sys.path.append('/path/to/build')
 import mlp_py
 ```
