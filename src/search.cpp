@@ -29,9 +29,13 @@ double search(int iIls, int dimension, vector<double> &nodeWeights,
   }
 
   for(int iterMax = 0; iterMax < 10; iterMax++){
-    double alpha = (rand() % 90) / 100.0 + 0.1;
+    // double alpha = (rand() % 90) / 100.0 + 0.1;
+    double alpha = (rand() % 30) / 100.0;
 
-    currentSolution = construction(vertices, alpha); // Generates initial solution
+
+    currentSolution = construction(vertices, nodeWeights, alpha); // Generates initial solution
+    // currentSolution = constructionSmith(vertices, nodeWeights, alpha);
+
     updatesMatrix(subsequenceMatrix, currentSolution, nodeWeights); // Updates subsequence matrix with new solution
     
     bestCurrentSolution = currentSolution;
@@ -67,18 +71,21 @@ double search(int iIls, int dimension, vector<double> &nodeWeights,
   }
 
   if (verbose) {
-    clock_t end = clock(); // Ends time counting
-    double time = ((double) (end - start)) / CLOCKS_PER_SEC;
-    cout << "Search time: " << setprecision( time<2.0? 3 : 2) <<time << " seconds." << endl;
-    cout << "Final Cost: " << setprecision(finalCost<10e2 ? 0: 3) << finalCost << endl;
-    setprecision(cout.precision());
+    clock_t end = clock();
+    double time = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+    auto oldFlags = cout.flags();
+    auto oldPrec  = cout.precision();
+
+    cout << std::fixed;
+    cout << "Search time: " << std::setprecision(3) << time << " s\n";
+    cout << "Final Cost: "  << std::setprecision(2) << finalCost << "\n";
     cout << "Solution: [";
-    for(int i = 0; i < finalSolution.size(); i++){
-      cout << finalSolution[i] << " ";
-    }
-    cout <<"]" << endl;
+    for (int v : finalSolution) cout << v << ' ';
+    cout << "]\n";
 
+    cout.flags(oldFlags);
+    cout.precision(oldPrec);
   }
-
   return finalCost;  
 }

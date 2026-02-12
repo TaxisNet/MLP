@@ -24,7 +24,9 @@ int main(int argc, char** argv) {
 
   // Make a fake command line argument list
   if (argc < 2) {
-    char* fake_argv[] = {(char*)"main", (char*)"/home/taxis/Documents/MLP/instances/berlin52.tsp"};
+    // char* fake_argv[] = {(char*)"main", (char*)"/home/taxis/Documents/MLP/instances/burma14.tsp"};
+    // char* fake_argv[] = {(char*)"main", (char*)"/home/taxis/Documents/MLP/instances/berlin52.tsp"};
+    char* fake_argv[] = {(char*)"main", (char*)"/home/taxis/Documents/MLP/instances/rd100.tsp"};
     readData(2, fake_argv, &dimension, &distanceMatrix);
   }else {
     readData(argc, argv, &dimension, &distanceMatrix);

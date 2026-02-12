@@ -15,17 +15,17 @@ bool compares(insertionInfo a, insertionInfo b){
 
 
 
-vector <int> construction(vector <int> candidatesList, double alpha){
+vector <int> construction(vector <int> candidatesList, const vector<double>& nodeWeights, double alpha){
   vector <int> initialSolution;
-
+  // This funvtion doesnt consider weights, but they are passed as parameter for consistency to the  constructionSmith function
   // Insert depot
   initialSolution.push_back(candidatesList[0]);
 
   // Deletes it from candidates list
   candidatesList.erase(candidatesList.begin());
-
+  int sample_candidates = min(3, (int)candidatesList.size());
   // Chooses 3 random vertices
-  for(int i = 0; i < 3; i++){
+  for(int i = 0; i < sample_candidates; i++){
     int j = rand() % candidatesList.size();
     initialSolution.insert(initialSolution.begin()+1, candidatesList[j]); 
     candidatesList.erase(candidatesList.begin()+j);
@@ -71,8 +71,7 @@ vector <int> construction(vector <int> candidatesList, double alpha){
   return initialSolution;
 }
 
-vector<int> constructionSmith(vector<int> candidatesList,
-                              const vector<double>& nodeWeights) {
+vector<int> constructionSmith(vector<int> candidatesList, const vector<double>& nodeWeights, double alpha) {
   vector<int> solution;
 
   // Start at depot (assumes candidatesList[0] is depot)
@@ -101,7 +100,7 @@ vector<int> constructionSmith(vector<int> candidatesList,
         [](pair<double,int>& a, pair<double,int>& b){ return a.first < b.first; });
 
     // pick random from top-K
-    int K = max(1, (int)(0.2 * scored.size())); // 20% RCL
+    int K = max(1, (int)(alpha * scored.size())); // alpha % RCL
     int pick = rand() % K;
     int pickedIndex = scored[pick].second;
 
