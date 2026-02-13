@@ -189,7 +189,7 @@ void readData( int argc, char** argv, int* Dimension, double ***Mdist )
 
             // Preencher Matriz Distancia
             for ( int j = 1; j < N; j++ ) {
-                for ( int i = j+1; i < N+1; j++ ) {
+                for ( int i = j+1; i < N+1; i++ ) {
                     in >> dist[i][j];
                     dist[j][i] = dist[i][j];
                 }
@@ -224,7 +224,7 @@ void readData( int argc, char** argv, int* Dimension, double ***Mdist )
 
             // Preencher Matriz Distancia
             for ( int j = 1; j < N+1; j++ ) {
-                for ( int i = j; i < N+1; j++ ) {
+                for ( int i = j; i < N+1; i++ ) {
                     in >> dist[i][j];
                     dist[j][i] = dist[i][j];
                 }

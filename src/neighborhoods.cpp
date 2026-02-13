@@ -463,7 +463,7 @@ void updatesMatrix(vector <vector <subsequenceInfo>> &subsequenceMatrix, vector 
         subsequenceMatrix[j][i].sumWeights = subsequenceMatrix[i][j].sumWeights;
         
         // Number of vertices from position i to j
-        subsequenceMatrix[i][j].vertices = j - i;
+        subsequenceMatrix[i][j].vertices = j - i + 1;
         subsequenceMatrix[j][i].vertices = subsequenceMatrix[i][j].vertices;
       }
     }
@@ -569,18 +569,17 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
       neighbor = oropt2(solution, subsequenceMatrix, nodeWeights);
 
       if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
-
-        if(neighbor.iBest < neighbor.jBest){
-          solution.insert(solution.begin() + neighbor.jBest + 2, solution[neighbor.iBest]); 
-          solution.insert(solution.begin() + neighbor.jBest + 3, solution[neighbor.iBest+1]); 
-          solution.erase(solution.begin() + neighbor.iBest);
-          solution.erase(solution.begin() + neighbor.iBest);
-        } else {
-          solution.insert(solution.begin() + neighbor.jBest, solution[neighbor.iBest]); 
-          solution.insert(solution.begin() + neighbor.jBest + 1, solution[neighbor.iBest + 2]); 
-          solution.erase(solution.begin() + neighbor.iBest + 2);
-          solution.erase(solution.begin() + neighbor.iBest + 2);
+        vector<int> block = {solution[neighbor.iBest], solution[neighbor.iBest + 1]};
+  
+        // If we remove elements BEFORE the target, the target index shifts left by 2 (for OR-Opt 2).
+        int insertPos = neighbor.jBest;
+        if (neighbor.iBest < neighbor.jBest) {
+          insertPos -= 2; 
         }
+        
+        solution.erase(solution.begin() + neighbor.iBest, solution.begin() + neighbor.iBest + 2);
+        
+        solution.insert(solution.begin() + insertPos, block.begin(), block.end());
 
         // Updates subsequence matrix with new solution
         updatesMatrix(subsequenceMatrix, solution, nodeWeights);
@@ -594,22 +593,17 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
       neighbor = oropt3(solution, subsequenceMatrix, nodeWeights);
 
       if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
+        vector<int> block = {solution[neighbor.iBest], solution[neighbor.iBest + 1], solution[neighbor.iBest + 2]};
 
-        if(neighbor.iBest < neighbor.jBest){
-          solution.insert(solution.begin() + neighbor.jBest + 3, solution[neighbor.iBest]);
-          solution.insert(solution.begin() + neighbor.jBest + 4, solution[neighbor.iBest+1]); 
-          solution.insert(solution.begin() + neighbor.jBest + 5, solution[neighbor.iBest+2]);
-          solution.erase(solution.begin() + neighbor.iBest);
-          solution.erase(solution.begin() + neighbor.iBest);
-          solution.erase(solution.begin() + neighbor.iBest);
-        } else {
-          solution.insert(solution.begin() + neighbor.jBest, solution[neighbor.iBest]);
-          solution.insert(solution.begin() + neighbor.jBest + 1, solution[neighbor.iBest + 2]); 
-          solution.insert(solution.begin() + neighbor.jBest + 2, solution[neighbor.iBest + 4]); 
-          solution.erase(solution.begin() + neighbor.iBest + 3);
-          solution.erase(solution.begin() + neighbor.iBest + 3);
-          solution.erase(solution.begin() + neighbor.iBest + 3);
+         // If we remove elements BEFORE the target, the target index shifts left by 3 (for OR-Opt 3).
+        int insertPos = neighbor.jBest;
+        if (neighbor.iBest < neighbor.jBest) {
+          insertPos -= 3; 
         }
+
+        solution.erase(solution.begin() + neighbor.iBest, solution.begin() + neighbor.iBest + 3);
+
+        solution.insert(solution.begin() + insertPos, block.begin(), block.end());
 
         // Updates subsequence matrix with new solution
         updatesMatrix(subsequenceMatrix, solution, nodeWeights);

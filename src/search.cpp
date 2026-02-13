@@ -17,10 +17,11 @@ double search(int iIls, int dimension, vector<double> &nodeWeights,
   vector <vector <subsequenceInfo>> subsequenceMatrix(dimension+1, vector <subsequenceInfo> (dimension+1));
   
   // time variables
-  clock_t start = 0; clock_t end=0;
+  clock_t start = 0; 
+  clock_t end = 0;
 
   if (verbose) {
-    clock_t start = clock(); // Starts time counting
+    start = clock(); // Starts time counting
   }
 
   // Creates a list of vertices from 1 to dimension (so is also 1-indexed)
@@ -33,8 +34,8 @@ double search(int iIls, int dimension, vector<double> &nodeWeights,
     double alpha = (rand() % 30) / 100.0;
 
 
-    currentSolution = construction(vertices, nodeWeights, alpha); // Generates initial solution
-    // currentSolution = constructionSmith(vertices, nodeWeights, alpha);
+    // currentSolution = construction(vertices, nodeWeights, alpha); // Generates initial solution
+    currentSolution = constructionSmith(vertices, nodeWeights, alpha);
 
     updatesMatrix(subsequenceMatrix, currentSolution, nodeWeights); // Updates subsequence matrix with new solution
     
@@ -71,7 +72,7 @@ double search(int iIls, int dimension, vector<double> &nodeWeights,
   }
 
   if (verbose) {
-    clock_t end = clock();
+    end = clock();
     double time = ((double)(end - start)) / CLOCKS_PER_SEC;
 
     auto oldFlags = cout.flags();
