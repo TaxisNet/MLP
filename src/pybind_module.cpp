@@ -103,6 +103,10 @@ static py::tuple run(const py::array_t<double, py::array::c_style | py::array::f
   std::vector<int> solution;
   double cost = search(iils, n, nodeWeights, &solution, verbose);
 
+  // Solution is 1-based, convert to 0-based for Python
+  for (int& node : solution) {
+    node -= 1;
+  }
   return py::make_tuple(cost, solution);
 }
 
