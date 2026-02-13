@@ -3,6 +3,7 @@
 #include <vector>
 #include <cfloat>
 #include <cstdlib>
+#include <iostream>
 
 using namespace std;
 
@@ -258,6 +259,7 @@ neighborInfo oropt2(vector <int> &solution, vector <vector <subsequenceInfo>> &s
     for(int j = 1; j <= size-3; j++){
       if(i != j){
         if(i < j){
+          if (j <= i + 1) continue; // invalid: j inside block [i, i+1]
           // Forward move: [0, i-1] → [i+2, j+1] → [i, i+1] → [j+2, n]
           
           // Segment [0, i-1]: unchanged
@@ -357,6 +359,7 @@ neighborInfo oropt3(vector <int> &solution, vector <vector <subsequenceInfo>> &s
     for(int j = 1; j <= size-4; j++){
       if(i != j){
         if(i < j){
+          if (j <= i + 2) continue; // invalid: j inside block [i, i+2]
           // Forward move: [0, i-1] → [i+3, j+2] → [i, i+1, i+2] → [j+3, n]
           
           // Segment [0, i-1]: unchanged
@@ -577,8 +580,20 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
           insertPos -= 2; 
         }
         
+
+        // If this prints a negative number for insertPos just before the crash, you found it.
+        if (insertPos < 0 || insertPos > solution.size()) {
+            // DEBUG PRINT
+            std::cout << "DEBUG: " 
+                      << " iBest: " << neighbor.iBest 
+                      << " jBest: " << neighbor.jBest 
+                      << " insertPos: " << insertPos 
+                      << " VecSize: " << solution.size() << std::endl;
+            std::cout << "!!! CRITICAL ERROR: Index out of bounds !!!" << std::endl;
+            // exit(1); // Force stop so you can see the last message
+        }
+
         solution.erase(solution.begin() + neighbor.iBest, solution.begin() + neighbor.iBest + 2);
-        
         solution.insert(solution.begin() + insertPos, block.begin(), block.end());
 
         // Updates subsequence matrix with new solution
@@ -601,8 +616,19 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
           insertPos -= 3; 
         }
 
-        solution.erase(solution.begin() + neighbor.iBest, solution.begin() + neighbor.iBest + 3);
+        // If this prints a negative number for insertPos just before the crash, you found it.
+        if (insertPos < 0 || insertPos > solution.size()) {
+            // DEBUG PRINT
+            std::cout << "DEBUG: " 
+                      << " iBest: " << neighbor.iBest 
+                      << " jBest: " << neighbor.jBest 
+                      << " insertPos: " << insertPos 
+                      << " VecSize: " << solution.size() << std::endl;
+            std::cout << "!!! CRITICAL ERROR: Index out of bounds !!!" << std::endl;
+            // exit(1); // Force stop so you can see the last message
+        }
 
+        solution.erase(solution.begin() + neighbor.iBest, solution.begin() + neighbor.iBest + 3);
         solution.insert(solution.begin() + insertPos, block.begin(), block.end());
 
         // Updates subsequence matrix with new solution
