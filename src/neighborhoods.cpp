@@ -256,11 +256,14 @@ neighborInfo oropt2(vector <int> &solution, vector <vector <subsequenceInfo>> &s
   bestNeighbor.bestCost = DBL_MAX;
 
   for(int i = 1; i < size-2; i++){
-    for(int j = 1; j <= size-3; j++){
+    for(int j = 1; j < size; j++){
       if(i != j){
         if(i < j){
-          if (j <= i + 1) continue; // invalid: j inside block [i, i+1]
-          // Forward move: [0, i-1] → [i+2, j+1] → [i, i+1] → [j+2, n]
+          if (j <= i + 2) continue; // invalid/no-op: reinserting in same place, forward-case formulas must use [i+2..j-1] and tail [j..n]
+
+
+
+          // Forward move: [0, i-1] → [i+2, j-1] → [i, i+1] → [j, n]
           
           // Segment [0, i-1]: unchanged
           partialCost = subsequenceMatrix[0][i-1].acumulateCost;
@@ -270,13 +273,13 @@ neighborInfo oropt2(vector <int> &solution, vector <vector <subsequenceInfo>> &s
           double edgeSkip = distanceMatrix[solution[i-1]][solution[i+2]];
           double middleShift = partialTime + edgeSkip;
           
-          // Segment [i+2, j+1]: shifted by middleShift
-          partialCost += subsequenceMatrix[i+2][j+1].sumWeights * middleShift + 
-                         subsequenceMatrix[i+2][j+1].acumulateCost;
-          partialTime = middleShift + subsequenceMatrix[i+2][j+1].totalTime;
+          // Segment [i+2, j-1]: shifted by middleShift
+          partialCost += subsequenceMatrix[i+2][j-1].sumWeights * middleShift + 
+                         subsequenceMatrix[i+2][j-1].acumulateCost;
+          partialTime = middleShift + subsequenceMatrix[i+2][j-1].totalTime;
           
-          // Insert first node (i) after segment [i+2, j+1]
-          double edgeToI = distanceMatrix[solution[j+1]][solution[i]];
+          // Insert first node (i) after segment [i+2, j-1]
+          double edgeToI = distanceMatrix[solution[j-1]][solution[i]];
           partialTime += edgeToI;
           partialCost += nodeWeights[solution[i]] * partialTime;
           
@@ -285,17 +288,12 @@ neighborInfo oropt2(vector <int> &solution, vector <vector <subsequenceInfo>> &s
           partialTime += edgeToI1;
           partialCost += nodeWeights[solution[i+1]] * partialTime;
           
-          // Remaining segment [j+2, n]: shifted by partialTime
-          // Tail condition check
-          if (j + 2 < size){
-          double edgeToRest = distanceMatrix[solution[i+1]][solution[j+2]];
+          // Remaining segment [j, n]: shifted by partialTime
+          double edgeToRest = distanceMatrix[solution[i+1]][solution[j]];
           double restShift = partialTime + edgeToRest;
           cost = partialCost + 
-                 subsequenceMatrix[j+2][size-1].sumWeights * restShift +
-                 subsequenceMatrix[j+2][size-1].acumulateCost;
-          } else {
-            cost = partialCost;
-          }
+                 subsequenceMatrix[j][size-1].sumWeights * restShift +
+                 subsequenceMatrix[j][size-1].acumulateCost;
 
                  
         }else{
@@ -356,11 +354,14 @@ neighborInfo oropt3(vector <int> &solution, vector <vector <subsequenceInfo>> &s
   bestNeighbor.bestCost = DBL_MAX;
 
   for(int i = 1; i < size-3; i++){
-    for(int j = 1; j <= size-4; j++){
+    for(int j = 1; j < size; j++){
       if(i != j){
         if(i < j){
-          if (j <= i + 2) continue; // invalid: j inside block [i, i+2]
-          // Forward move: [0, i-1] → [i+3, j+2] → [i, i+1, i+2] → [j+3, n]
+          if (j <= i + 3) continue; // invalid/no-op for length-3 block
+          // forward-case formulas must use [i+3..j-1] and tail [j..n]
+
+
+          // Forward move: [0, i-1] → [i+3, j-1] → [i, i+1, i+2] → [j, n]
           
           // Segment [0, i-1]: unchanged
           partialCost = subsequenceMatrix[0][i-1].acumulateCost;
@@ -370,13 +371,13 @@ neighborInfo oropt3(vector <int> &solution, vector <vector <subsequenceInfo>> &s
           double edgeSkip = distanceMatrix[solution[i-1]][solution[i+3]];
           double middleShift = partialTime + edgeSkip;
           
-          // Segment [i+3, j+2]: shifted by middleShift
-          partialCost += subsequenceMatrix[i+3][j+2].sumWeights * middleShift + 
-                         subsequenceMatrix[i+3][j+2].acumulateCost;
-          partialTime = middleShift + subsequenceMatrix[i+3][j+2].totalTime;
+          // Segment [i+3, j-1]: shifted by middleShift
+          partialCost += subsequenceMatrix[i+3][j-1].sumWeights * middleShift + 
+                         subsequenceMatrix[i+3][j-1].acumulateCost;
+          partialTime = middleShift + subsequenceMatrix[i+3][j-1].totalTime;
           
-          // Insert the 3-node subsequence [i, i+1, i+2] after segment [i+3, j+2]
-          double edgeToI = distanceMatrix[solution[j+2]][solution[i]];
+          // Insert the 3-node subsequence [i, i+1, i+2] after segment [i+3, j-1]
+          double edgeToI = distanceMatrix[solution[j-1]][solution[i]];
           double threeNodeShift = partialTime + edgeToI;
           
           // The 3 nodes as a subsequence, shifted by threeNodeShift
@@ -384,17 +385,13 @@ neighborInfo oropt3(vector <int> &solution, vector <vector <subsequenceInfo>> &s
                          subsequenceMatrix[i][i+2].acumulateCost;
           partialTime = threeNodeShift + subsequenceMatrix[i][i+2].totalTime;
           
-          // Remaining segment [j+3, n]: shifted by partialTime
+          // Remaining segment [j, n]: shifted by partialTime
           // Tail condition check
-          if (j + 3 < size){
-          double edgeToRest = distanceMatrix[solution[i+2]][solution[j+3]];
+          double edgeToRest = distanceMatrix[solution[i+2]][solution[j]];
           double restShift = partialTime + edgeToRest;
           cost = partialCost + 
-                 subsequenceMatrix[j+3][size-1].sumWeights * restShift +
-                 subsequenceMatrix[j+3][size-1].acumulateCost;
-          } else {
-            cost = partialCost;
-          }
+                 subsequenceMatrix[j][size-1].sumWeights * restShift +
+                 subsequenceMatrix[j][size-1].acumulateCost;
                  
         }else{
           // Backward move: [0, j-1] → [i, i+1, i+2] → [j, i-1] → [i+3, n]
@@ -527,10 +524,13 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
       neighbor = reinsertion(solution, subsequenceMatrix, nodeWeights);
 
       if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
-        vector <int> solutionInicial = solution;
 
-        solution.erase(solution.begin()+neighbor.iBest);
-        solution.insert(solution.begin()+neighbor.jBest, solutionInicial[neighbor.iBest]);
+        int insertPos = neighbor.jBest;
+        if (neighbor.iBest < neighbor.jBest) insertPos -= 1;
+
+        int node = solution[neighbor.iBest];
+        solution.erase(solution.begin() + neighbor.iBest);
+        solution.insert(solution.begin() + insertPos, node);
 
         // Updates subsequence matrix with new solution
         updatesMatrix(subsequenceMatrix, solution, nodeWeights);
@@ -590,14 +590,28 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
                       << " insertPos: " << insertPos 
                       << " VecSize: " << solution.size() << std::endl;
             std::cout << "!!! CRITICAL ERROR: Index out of bounds !!!" << std::endl;
-            // exit(1); // Force stop so you can see the last message
+            exit(1); // Force stop so you can see the last message
         }
 
         solution.erase(solution.begin() + neighbor.iBest, solution.begin() + neighbor.iBest + 2);
         solution.insert(solution.begin() + insertPos, block.begin(), block.end());
 
-        // Updates subsequence matrix with new solution
+        
+        double oldCost = subsequenceMatrix[0][size-1].acumulateCost;
+
+        // ... perform erase and insert ...
+
         updatesMatrix(subsequenceMatrix, solution, nodeWeights);
+        
+        double newCost = subsequenceMatrix[0][size-1].acumulateCost;
+
+        // DEBUG: Catch the infinite loop
+        if (newCost >= oldCost - 1e-6) {
+            std::cout << "STUCK! Predicted improvement but cost didn't drop." << std::endl;
+            std::cout << "Old: " << oldCost << " New: " << newCost << std::endl;
+            break; // Force break to stop the infinite loop
+        }
+        
         neighborhoods = {0, 1, 2, 3, 4};
 
       } else {
@@ -625,14 +639,28 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
                       << " insertPos: " << insertPos 
                       << " VecSize: " << solution.size() << std::endl;
             std::cout << "!!! CRITICAL ERROR: Index out of bounds !!!" << std::endl;
-            // exit(1); // Force stop so you can see the last message
+            exit(1); // Force stop so you can see the last message
         }
 
         solution.erase(solution.begin() + neighbor.iBest, solution.begin() + neighbor.iBest + 3);
         solution.insert(solution.begin() + insertPos, block.begin(), block.end());
 
         // Updates subsequence matrix with new solution
+        double oldCost = subsequenceMatrix[0][size-1].acumulateCost;
+
+        // ... perform erase and insert ...
+
         updatesMatrix(subsequenceMatrix, solution, nodeWeights);
+        
+        double newCost = subsequenceMatrix[0][size-1].acumulateCost;
+
+        // DEBUG: Catch the infinite loop
+        if (newCost >= oldCost - 1e-6) {
+            std::cout << "STUCK! Predicted improvement but cost didn't drop." << std::endl;
+            std::cout << "Old: " << oldCost << " New: " << newCost << std::endl;
+            break; // Force break to stop the infinite loop
+        }
+        
         neighborhoods = {0, 1, 2, 3, 4};
 
       } else {
