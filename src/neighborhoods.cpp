@@ -580,38 +580,12 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
           insertPos -= 2; 
         }
         
-
-        // If this prints a negative number for insertPos just before the crash, you found it.
-        if (insertPos < 0 || insertPos > solution.size()) {
-            // DEBUG PRINT
-            std::cout << "DEBUG: " 
-                      << " iBest: " << neighbor.iBest 
-                      << " jBest: " << neighbor.jBest 
-                      << " insertPos: " << insertPos 
-                      << " VecSize: " << solution.size() << std::endl;
-            std::cout << "!!! CRITICAL ERROR: Index out of bounds !!!" << std::endl;
-            exit(1); // Force stop so you can see the last message
-        }
-
+        //  Form the new solution by removing the block and inserting it at the new position
         solution.erase(solution.begin() + neighbor.iBest, solution.begin() + neighbor.iBest + 2);
         solution.insert(solution.begin() + insertPos, block.begin(), block.end());
 
-        
-        double oldCost = subsequenceMatrix[0][size-1].acumulateCost;
-
-        // ... perform erase and insert ...
 
         updatesMatrix(subsequenceMatrix, solution, nodeWeights);
-        
-        double newCost = subsequenceMatrix[0][size-1].acumulateCost;
-
-        // DEBUG: Catch the infinite loop
-        if (newCost >= oldCost - 1e-6) {
-            std::cout << "STUCK! Predicted improvement but cost didn't drop." << std::endl;
-            std::cout << "Old: " << oldCost << " New: " << newCost << std::endl;
-            break; // Force break to stop the infinite loop
-        }
-        
         neighborhoods = {0, 1, 2, 3, 4};
 
       } else {
@@ -630,37 +604,12 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
           insertPos -= 3; 
         }
 
-        // If this prints a negative number for insertPos just before the crash, you found it.
-        if (insertPos < 0 || insertPos > solution.size()) {
-            // DEBUG PRINT
-            std::cout << "DEBUG: " 
-                      << " iBest: " << neighbor.iBest 
-                      << " jBest: " << neighbor.jBest 
-                      << " insertPos: " << insertPos 
-                      << " VecSize: " << solution.size() << std::endl;
-            std::cout << "!!! CRITICAL ERROR: Index out of bounds !!!" << std::endl;
-            exit(1); // Force stop so you can see the last message
-        }
-
+        //  Form the new solution by removing the block and inserting it at the new position
         solution.erase(solution.begin() + neighbor.iBest, solution.begin() + neighbor.iBest + 3);
         solution.insert(solution.begin() + insertPos, block.begin(), block.end());
 
         // Updates subsequence matrix with new solution
-        double oldCost = subsequenceMatrix[0][size-1].acumulateCost;
-
-        // ... perform erase and insert ...
-
-        updatesMatrix(subsequenceMatrix, solution, nodeWeights);
-        
-        double newCost = subsequenceMatrix[0][size-1].acumulateCost;
-
-        // DEBUG: Catch the infinite loop
-        if (newCost >= oldCost - 1e-6) {
-            std::cout << "STUCK! Predicted improvement but cost didn't drop." << std::endl;
-            std::cout << "Old: " << oldCost << " New: " << newCost << std::endl;
-            break; // Force break to stop the infinite loop
-        }
-        
+        updatesMatrix(subsequenceMatrix, solution, nodeWeights);        
         neighborhoods = {0, 1, 2, 3, 4};
 
       } else {
