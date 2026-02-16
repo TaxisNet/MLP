@@ -108,11 +108,21 @@ import mlp_py
 cost, solution = mlp_py.run(distance_matrix, weights, iils=-1, seed=-1, verbose=False)
 ```
 
-Notes:
-- `distance_matrix` must be a **square** NumPy array.
-- `weights` can be length $n$ (1‑based internally) or length $n+1$.
-- Set `seed` for reproducible runs.
+## Python Arguments
 
+The `mlp_py.run()` function accepts the following arguments:
+
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `distance_matrix` | `numpy.ndarray` (2D, float64) | Required | (Symmetric) Square distance matrix of shape (n, n) |
+| `weights` | `numpy.ndarray` (1D, float64) | Required | Node weights of length n |
+| `iils` | `int` | -1 | Number of IILS iterations; if -1, auto-set to min(100, n) |
+| `seed` | `int` | -1 | Random seed; if -1, uses current time |
+| `verbose` | `bool` | False | Enable verbose output during search |
+
+**Returns:** Tuple of `(cost: float, solution: list[int])`
+- `cost`: Best tour cost found
+- `solution`: 0-based node indices representing the tour
 ## Benchmarking
 Use the provided script:
 
