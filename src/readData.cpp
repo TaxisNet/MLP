@@ -3,12 +3,64 @@
 #include <fstream>
 #include <cmath>
 
+#
+#include <nlohmann/json.hpp>
+
 using namespace std;
+
+using json = nlohmann::json;
 
 double CalcDistEuc ( double *X, double *Y, int I, int J );
 double CalcDistAtt ( double *X, double *Y, int I, int J );
 void CalcLatLong ( double *X, double *Y, int n, double *latit, double* longit );
 double CalcDistGeo ( double *latit, double *longit, int I, int J );
+
+void readDataFromJson(const char* jsonPath, int* Dimension, double*** Mdist, vector<double>& Mweights) {
+    // Read JSON file
+    std::ifstream file(jsonPath);
+    if (!file.is_open()) {
+        std::cout << "Cannot open JSON file: " << jsonPath << std::endl;
+        exit(1);
+    }
+    
+
+    // cout << "Reading data from JSON file: " << jsonPath << std::endl;
+    json j;
+    file >> j;
+    
+    // Get the distance matrix from JSON
+    auto distMatrix = j["distance_matrix"];
+    int N = distMatrix.size();
+    
+    // Check if node weights are provided
+    if (j.contains("weights")) {
+        auto nodeWeights = j["weights"];
+        int M = nodeWeights.size();
+        Mweights.resize(M+1); // 1-indexed
+        for (int i = 0; i < M; i++) {
+           Mweights[i+1] = nodeWeights[i].get<double>();
+        }
+    }
+
+
+
+    // Allocate 2D array
+    double** dist = new double*[N+1];
+    for (int i = 0; i < N+1; i++) {
+        dist[i] = new double[N+1];
+    }
+    
+    // Copy data from JSON (1-indexed)
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            dist[i+1][j+1] = distMatrix[i][j].get<double>();
+        }
+    }
+    
+    *Dimension = N;
+    *Mdist = dist;
+}
+
 
 void readData( int argc, char** argv, int* Dimension, double ***Mdist )
 {

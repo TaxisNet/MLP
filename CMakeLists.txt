@@ -4,6 +4,14 @@ project(MLP LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Add nlohmann/json
+include(FetchContent)
+FetchContent_Declare(json
+  GIT_REPOSITORY https://github.com/nlohmann/json.git
+  GIT_TAG v3.11.2
+)
+FetchContent_MakeAvailable(json)
+
 add_executable(mlp
     src/main.cpp
     src/readData.cpp
@@ -13,7 +21,7 @@ add_executable(mlp
 )
 
 target_include_directories(mlp PRIVATE src)
-
+target_link_libraries(mlp PRIVATE nlohmann_json::nlohmann_json)
 
 # Pybind11 module
 option(BUILD_PYBIND "Build pybind11 module" ON)

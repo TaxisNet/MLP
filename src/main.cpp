@@ -21,15 +21,30 @@ int main(int argc, char** argv) {
 
   clock_t start = clock(); // Starts time counting
   
+  // nodeWeights[i] represents the weight of node i (so is also 1-indexed)
+  vector<double> nodeWeights;
 
+
+   // Check if loading from JSON
+  if (argc >= 2 && string(argv[1]).find(".json") != string::npos) {
+    readDataFromJson(argv[1], &dimension, &distanceMatrix, nodeWeights);
+  }
   // Make a fake command line argument list
-  if (argc < 2) {
+  else if (argc < 2) {
     // char* fake_argv[] = {(char*)"main", (char*)"/home/taxis/Documents/MLP/instances/burma14.tsp"};
-    // char* fake_argv[] = {(char*)"main", (char*)"/home/taxis/Documents/MLP/instances/berlin52.tsp"};
-    char* fake_argv[] = {(char*)"main", (char*)"/home/taxis/Documents/MLP/instances/rd100.tsp"};
+    char* fake_argv[] = {(char*)"main", (char*)"/home/taxis/Documents/MLP/instances/berlin52.tsp"};
+    // char* fake_argv[] = {(char*)"main", (char*)"/home/taxis/Documents/MLP/instances/rd100.tsp"};
     readData(2, fake_argv, &dimension, &distanceMatrix);
   }else {
     readData(argc, argv, &dimension, &distanceMatrix);
+  }
+  
+  if (nodeWeights.empty()) {
+    // nodeWeights[i] represents the weight of node i (so is also 1-indexed)
+    // cout << "No node weights provided in JSON. Initializing all node weights to 1.0." << endl;
+    for (int i = 0; i < dimension + 1; i++) {
+      nodeWeights.push_back(1.0); // Initialize all node weights to 1.0
+    }
   }
 
   srand(time(NULL));
@@ -41,9 +56,6 @@ int main(int argc, char** argv) {
   } else {
     iIls = dimension;
   }
-
-  // nodeWeights[i] represents the weight of node i (so is also 1-indexed)
-  vector <double> nodeWeights(dimension + 1, 1.0); // Initialize all node weights to 1.0
   
   
   double cost = search(iIls, dimension, nodeWeights);
