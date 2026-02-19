@@ -10,7 +10,7 @@ neighborInfo twoOpt(vector <int> &solution, vector <vector <subsequenceInfo>> &s
 neighborInfo reinsertion(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights);
 neighborInfo oropt2(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights);
 neighborInfo oropt3(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights);
-void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights);
+void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights, double tolerance);
 void updatesMatrix(vector <vector <subsequenceInfo>> &subsequenceMatrix, vector <int> &solution, vector<double> &nodeWeights); 
 
 #endif 

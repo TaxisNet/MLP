@@ -494,18 +494,19 @@ void updatesMatrix(vector <vector <subsequenceInfo>> &subsequenceMatrix, vector 
   }
 }
 
-void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights){
+void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequenceMatrix, vector<double> &nodeWeights, double tolerance) {
   vector <int> neighborhoods = {0, 1, 2, 3, 4};
   neighborInfo neighbor;
   int size = solution.size();
 
+  
   while(!neighborhoods.empty()){
     int choosen = rand() % neighborhoods.size();
 
     if(neighborhoods[choosen] == 0){
       neighbor = swap(solution, subsequenceMatrix, nodeWeights);
 
-      if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
+      if(neighbor.bestCost  + tolerance < subsequenceMatrix[0][size-1].acumulateCost ){
 
         int aux = solution[neighbor.iBest];
 	      solution[neighbor.iBest] = solution[neighbor.jBest];
@@ -523,7 +524,7 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
     }else if(neighborhoods[choosen] == 1){
       neighbor = reinsertion(solution, subsequenceMatrix, nodeWeights);
 
-      if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
+      if(neighbor.bestCost  + tolerance < subsequenceMatrix[0][size-1].acumulateCost ){
 
         int insertPos = neighbor.jBest;
         if (neighbor.iBest < neighbor.jBest) insertPos -= 1;
@@ -544,7 +545,7 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
     }else if(neighborhoods[choosen] == 2){
       neighbor = twoOpt(solution, subsequenceMatrix, nodeWeights);
 
-      if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
+      if(neighbor.bestCost  + tolerance < subsequenceMatrix[0][size-1].acumulateCost ){
 
         int aux, k = neighbor.jBest - neighbor.iBest;
 
@@ -571,7 +572,7 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
 
       neighbor = oropt2(solution, subsequenceMatrix, nodeWeights);
 
-      if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
+      if(neighbor.bestCost  + tolerance < subsequenceMatrix[0][size-1].acumulateCost ){
         vector<int> block = {solution[neighbor.iBest], solution[neighbor.iBest + 1]};
   
         // If we remove elements BEFORE the target, the target index shifts left by 2 (for OR-Opt 2).
@@ -595,7 +596,7 @@ void RVND(vector <int> &solution, vector <vector <subsequenceInfo>> &subsequence
     }else if(neighborhoods[choosen] == 4){
       neighbor = oropt3(solution, subsequenceMatrix, nodeWeights);
 
-      if(neighbor.bestCost < subsequenceMatrix[0][size-1].acumulateCost){
+      if(neighbor.bestCost  + tolerance < subsequenceMatrix[0][size-1].acumulateCost ){
         vector<int> block = {solution[neighbor.iBest], solution[neighbor.iBest + 1], solution[neighbor.iBest + 2]};
 
          // If we remove elements BEFORE the target, the target index shifts left by 3 (for OR-Opt 3).

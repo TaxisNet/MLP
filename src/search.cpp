@@ -28,6 +28,7 @@ double search(int iIls, int dimension, vector<double> &nodeWeights,
   for(int i = 0; i < dimension; i++){
     vertices.push_back(i+1);
   }
+  double tolerance = 1e-5; // Tolerance for floating-point comparisons
 
   for(int iterMax = 0; iterMax < 10; iterMax++){
     // double alpha = (rand() % 90) / 100.0 + 0.1;
@@ -41,14 +42,13 @@ double search(int iIls, int dimension, vector<double> &nodeWeights,
     
     bestCurrentSolution = currentSolution;
     bestCurrentCost = subsequenceMatrix[0][currentSolution.size()-1].acumulateCost;
-
     int iterIls = 0;
     while(iterIls < iIls){
-      RVND(currentSolution, subsequenceMatrix, nodeWeights);
+      RVND(currentSolution, subsequenceMatrix, nodeWeights, tolerance); // Applies RVND to current solution
 
       currentCost = subsequenceMatrix[0][currentSolution.size()-1].acumulateCost;
 
-      if(currentCost < bestCurrentCost){
+      if(currentCost + tolerance < bestCurrentCost){
         bestCurrentSolution = currentSolution;
         bestCurrentCost = currentCost;
         iterIls = 0;
