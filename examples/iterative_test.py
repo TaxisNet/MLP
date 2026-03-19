@@ -1,8 +1,10 @@
 import numpy as np
 import networkx as nx
+
 # add to PYTHONPATH
-import sys
-sys.path.append('/home/taxis/Documents/MLP/build')
+import sys, os
+MPL_PATH = os.path.join(os.path.expanduser('~'), 'Documents', 'MLP', 'build')
+sys.path.append(MPL_PATH)
 import mlp_py
 
 

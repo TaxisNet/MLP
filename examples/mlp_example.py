@@ -1,14 +1,15 @@
 import numpy as np
 
 # add to PYTHONPATH
-import sys
-sys.path.append('/home/taxis/Documents/MLP/build')
+import sys, os
+MPL_PATH = os.path.join(os.path.expanduser('~'), 'Documents', 'MLP', 'build')
+sys.path.append(MPL_PATH)
 
 import mlp_py
 
 
 np.random.seed(100)  # For reproducibility
-n = 80
+n = 100
 dist = np.random.rand(n, n)*100  # Random distance matrix with values between 0 and 100
 dist = (dist + dist.T) / 2.0
 np.fill_diagonal(dist, 0.0)
