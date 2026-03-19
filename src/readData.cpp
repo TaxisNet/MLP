@@ -24,7 +24,7 @@ void readDataFromJson(const char* jsonPath, int* Dimension, double*** Mdist, vec
     }
     
 
-    // cout << "Reading data from JSON file: " << jsonPath << std::endl;
+    cout << "Reading data from JSON file: " << jsonPath << std::endl;
     json j;
     file >> j;
     
@@ -32,8 +32,10 @@ void readDataFromJson(const char* jsonPath, int* Dimension, double*** Mdist, vec
     auto distMatrix = j["distance_matrix"];
     int N = distMatrix.size();
     
+    
     // Check if node weights are provided
     if (j.contains("weights")) {
+        cout << "Reading weights"<< std::endl;
         auto nodeWeights = j["weights"];
         int M = nodeWeights.size();
         Mweights.resize(M+1); // 1-indexed

@@ -6,11 +6,12 @@ cmake -S . -B build
 cmake --build build --config Release
 
 k=1
-for instance in instances/*; do
+for instance in instances/*.tsp; do
 	echo $instance >> ./benchmark/bm.txt
 
 	echo "Running $instance"
-	echo "Instance $k of 23" 
+
+	echo "Instance $k" 
 
 	for i in {1..10}; do
 		./build/mlp ${instance} | grep 'Custo\|Tempo' | awk "{print $1}" >> ./benchmark/bm.txt
